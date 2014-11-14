@@ -16,12 +16,35 @@
 require 'benchmark'
 
 class Place
-  attr_accessor :marking
   attr_reader :name
 
   def initialize(name, marking = [])
     @name = name
-    @marking = marking
+    @marking = clone marking
+  end
+
+  def marking
+    clone @marking
+  end
+
+  def marking=(m)
+    @marking = clone m
+  end
+
+  def marking_delete(token)
+    @marking.delete token
+  end
+
+  def marking_add(token)
+    @marking << clone(token)
+  end
+
+  private
+  # if you turn on this cloning, it works 5x slower...
+  def clone(o)
+    #Marshal.load(Marshal.dump(o))
+    #o.clone
+    o
   end
 end
 
@@ -88,10 +111,10 @@ class Transition
 
     return false if binding.nil?
     binding.each do |place_name, token|
-      find_input(place_name).marking.delete(token)
+      find_input(place_name).marking_delete(token)
     end
     @outputs.each do |o|
-      o.place.marking << o.block.call(binding)
+      o.place.marking_add o.block.call(binding)
     end
     true
   end
