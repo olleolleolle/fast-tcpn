@@ -13,6 +13,8 @@
 # of n**k as in case of analysing cartesian product for traditional
 # boolean guard
 
+require 'benchmark'
+
 class Place
   attr_accessor :marking
   attr_reader :name
@@ -112,10 +114,10 @@ class Transition
   end
 end
 
-Process = Struct.new(:name)
+AppProcess = Struct.new(:name)
 CPU = Struct.new(:name, :process)
 
-procs = 1000.times.map { |i| Process.new(i) }
+procs = 1000.times.map { |i| AppProcess.new(i) }
 cpus = procs.map { |p| 10.times.map { |i| CPU.new("CPU#{i}_#{p.name}", p.name) } }.reduce(:+)
 
 p1 = Place.new :process, procs
@@ -145,7 +147,11 @@ t.guard do |marking_hash|
   res
 end
 
-{} while t.fire
+Benchmark.bm do |x|
+  x.report do
+    {} while t.fire
+  end
+end
 
 puts p1.marking.size
 puts p2.marking.size
