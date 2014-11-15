@@ -41,7 +41,20 @@ class Place
 
   private
   # if you turn on this cloning, it works 5x slower...
+  # (23:06:19) Maciek: GoF book mówi że można zastosować
+  # wzorzec proxy w celu zapewnienia copy-on-write
+  # Tworząc proxy można: deep_freeze token
+  # (https://github.com/dkubb/ice_nine), potem klonować
+  # jeśli poleci wyjątek. Jaki narzut?
   def clone(o)
+
+    # this will not work for Proc and friends...
+    # overriding it just for Proc can be tedious...
+    # This: https://github.com/balmma/ruby-deepclone
+    # has the same proble,
+    # Here is a deepclone implementation:
+    # http://stackoverflow.com/questions/8206523/how-to-create-a-deep-copy-of-an-object-in-ruby
+    # this should be easy to tweek.
     #Marshal.load(Marshal.dump(o))
     #o.clone
     o
