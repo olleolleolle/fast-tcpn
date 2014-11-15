@@ -32,6 +32,15 @@
 # The above times were obtained for 1000 procs, 10 cpus for each and
 # ruby_deep_clone library.
 #
+#
+# Possible optimization.
+# If we could define how a place stores its marking, it would make
+# firing transition much faster. Ther would be no need to rewrite
+# tokens from array to other structure, e.g Hash. We could e.g. define
+# that processes should be stored in a Hash keyed by process name and
+# thus make all guards matching by process name much faster! How to
+# do this to make it sufficiently general? Different (custom) 
+# implementations of Marking class?
 
 require 'benchmark'
 require 'deep_clone'
