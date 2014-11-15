@@ -14,6 +14,7 @@
 # boolean guard
 
 require 'benchmark'
+require 'deep_clone'
 
 class Place
   attr_reader :name
@@ -55,6 +56,7 @@ class Place
     # Here is a deepclone implementation:
     # http://stackoverflow.com/questions/8206523/how-to-create-a-deep-copy-of-an-object-in-ruby
     # this should be easy to tweek.
+    DeepClone.clone o
     #Marshal.load(Marshal.dump(o))
     #o.clone
     o
