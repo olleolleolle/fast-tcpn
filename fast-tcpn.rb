@@ -41,6 +41,32 @@
 # thus make all guards matching by process name much faster! How to
 # do this to make it sufficiently general? Different (custom) 
 # implementations of Marking class?
+#
+# HashMarking -- when creating Place define token keys that will be used
+# to search tokens in different transitions, these keys will be passed to
+# HashMarking object created in the Place. The HashMarking object maintains
+# a Hash of tokens for each of the keys defined when creating the Place.
+# Every token in the Place is put in each Hash udenr different keys. 
+# HashMarking exposes method named after the keys, that find token in
+# appropriate Hash using given key. This way we will have possibility
+# to quickly find tokens using require criterions. Adding a token to marking
+# requires adding to each Hash (an probably an Array that probably should 
+# also be maintaned). Deleting requires removal from every Hash (but using
+# the Hash'es key, thus quickly). It will be a little slower, but adding 
+# and deleting is much less often then finding tokens while trying to fire
+# a transition. Memory oveshead will not be significant, since the Hashes
+# will store only reference to a single copy of the object. The keys may
+# not uniquely identify objects, so the Hashes should store arrays of
+# objects matching given key. Iterators should be exposed for these arrays
+# and for the whole marking. The iterators should shuffle the arrays before
+# starting iteration and clone yielded objects -- anyway we assume that
+# shuffling will let one take first object returned by iterator, so cloning
+# will be rare.
+#
+# Thus we will be able to fire transition not in linear time, but in O(1) 
+# time at the expense of not significant memory overhead and insignificant 
+# complication of add/delete token operations for marking!
+#
 
 require 'benchmark'
 require 'deep_clone'
