@@ -170,12 +170,13 @@ t.output cpu do |binding|
 end
 
 t.guard do |marking_hash|
-  cpus = {}
-  marking_hash[:cpu].each { |c| cpus[c.process] ||= []; cpus[c.process] << c }
+  procs = {}
+  marking_hash[:process].each { |p| procs[p.name] = p }
   catch(:found) do
-    marking_hash[:process].each do |p|
-      cpus[p.name].each do |c|
-        throw :found, {process: p, cpu: c}
+    marking_hash[:cpu].each do |c|
+      process = procs[c.process]
+      unless process.nil?
+        throw :found, {process: process, cpu: c}
       end
     end
     nil
