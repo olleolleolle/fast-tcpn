@@ -101,8 +101,7 @@ class Transition
   # The guard block will be given markings of
   # all input places in the form of Hash:
   # { place_name => Array_of_tokens, ... }
-  # It must return Array of subsequent
-  # valid bindings each in the form of Hash with
+  # It must return a valid binding in the form of Hash with
   # { place_name => token, another_place_name => another_token }
   def guard(&block)
     @guard = block
@@ -118,9 +117,7 @@ class Transition
     # able to take just first found binding here
     # * no need to iterate to the end
     # * no need to generate maybe large data structure
-    valid_bindings = @guard.call(marking_hash)
-    binding = valid_bindings[rand * valid_bindings.length]
-
+    binding = @guard.call(marking_hash)
 
     return false if binding.nil?
     binding.each do |place_name, token|
@@ -137,7 +134,7 @@ class Transition
   def marking_hash
     bnd = {}
     @inputs.each do |place|
-      bnd[place.name] = place.marking
+      bnd[place.name] = place.marking.shuffle
     end
     bnd
   end
@@ -171,16 +168,16 @@ t.output cpu do |binding|
 end
 
 t.guard do |marking_hash|
-  res = []
   cpus = {}
   marking_hash[:cpu].each { |c| cpus[c.process] ||= []; cpus[c.process] << c }
-  res = []
-  marking_hash[:process].each do |p|
-    cpus[p.name].each do |c|
-      res << { process: p, cpu: c }
+  catch(:found) do
+    marking_hash[:process].each do |p|
+      cpus[p.name].each do |c|
+        throw :found, {process: p, cpu: c}
+      end
     end
+    nil
   end
-  res
 end
 
 Benchmark.bm do |x|
