@@ -13,6 +13,26 @@
 # of n**k as in case of analysing cartesian product for traditional
 # boolean guard
 
+#
+# Note on clining.
+#
+# Branch clone_selected_tokens assumes that only tokens
+# used by the user are cloned. Here we clone whole marking
+# before it can be used in guard or inscription. For well 
+# prepared guard, when possible small number of tokens is 
+# taken from marking it is faster to clone individual tokens 
+# (4 sec instead of 6.9 sec). But for worse guard it is faster 
+# to clone whole marking at the begining, then many individual 
+# tokens (14 sec. instead of 6.9 sec). The better guard in this
+# example is when we put all processes in a Hash and try to match 
+# a CPU, worse guard is when we put all CPUs in a Hash and try to 
+# match a process. We have 10 times more CPUs the processes in this 
+# example, and putting a token into a Hash requires cloning it.
+#
+# The above times were obtained for 1000 procs, 10 cpus for each and
+# ruby_deep_clone library.
+#
+
 require 'benchmark'
 require 'deep_clone'
 
@@ -113,12 +133,8 @@ class Transition
   # returns true if fired false otherwise
   def fire
 
-    # FIXME:
-    # if we shuffle place order in marking_hash
-    # and tokens in each places order, we will be
-    # able to take just first found binding here
-    # * no need to iterate to the end
-    # * no need to generate maybe large data structure
+    # Marking is shuffled each time before it is
+    # used so here we can take first found binding
     binding = @guard.call(marking_hash)
 
     return false if binding.nil?
