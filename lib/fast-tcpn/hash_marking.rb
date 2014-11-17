@@ -1,8 +1,21 @@
 require 'deep_clone'
 
+class Array
+  def lazy_shuffle
+    return enum_for(:lazy_shuffle) unless block_given?
+    a = self.clone
+    a.size.times do
+      i = rand a.size
+      yield a.delete_at i
+    end
+  end
+end
+
 module FastTCPN
 
   class HashMarking
+
+
     InvalidToken = Class.new RuntimeError
     CannotAddKeys = Class.new RuntimeError
 
@@ -17,7 +30,7 @@ module FastTCPN
     def initialize(keys = {})
       @keys = keys
       @lists = {}
-      @global_list = []
+      @global_list = {}
     end
 
     def each(key = nil, value = nil)
@@ -25,9 +38,9 @@ module FastTCPN
       list = if !key.nil? && !value.nil?
                tokens_by_key key, value
              else
-               @global_list
+               @global_list.keys
              end
-      list.shuffle.each do |token|
+      list.lazy_shuffle.each do |token|
         yield clone token
       end
     end
@@ -46,15 +59,15 @@ module FastTCPN
     # Creates new token of the +object+ and 
     # adds it to the marking
     def add(object)
-      token = if object.kind_of? Token
+      token = if object.instance_of? Token
         clone object
       else
         Token.new clone(object)
       end
-      @global_list << token
+      @global_list[token] = true
       each_key_with(token) do |key_name, value|
         @lists[key_name] ||= {}
-        @lists[key_name][value] ||= []
+        @lists[key_name][value] ||= Array.new
         @lists[key_name][value] << token
       end
     end
@@ -65,7 +78,7 @@ module FastTCPN
     # To do it you must first find the token in
     # the marking.
     def delete(token)
-      unless token.kind_of? Token
+      unless token.instance_of? Token
         raise InvalidToken.new "#{token} is not a Token object!"
       end
       @global_list.delete token

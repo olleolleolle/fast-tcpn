@@ -72,6 +72,8 @@ require 'benchmark'
 require 'deep_clone'
 require 'fast-tcpn'
 
+require 'ruby-prof'
+
 module FastTCPN
 
   class Place
@@ -191,7 +193,7 @@ p1 = FastTCPN::Place.new :process, { name: :name }
 cpu = FastTCPN::Place.new :cpu, { process: :process }
 p2 = FastTCPN::Place.new :done
 
-1_000.times do |p| 
+10_000.times do |p| 
   p1.add AppProcess.new(p)
   10.times.map { |c| cpu.add CPU.new("CPU#{c}_#{p}", p) }
 end
@@ -215,11 +217,18 @@ t.guard do |marking_hash, result|
   end
 end
 
+#RubyProf.start
+
 Benchmark.bm do |x|
   x.report do
     {} while t.fire
   end
 end
+
+#result = RubyProf.stop
+# Print a flat profile to text
+#printer = RubyProf::FlatPrinter.new(result)
+#printer.print(STDOUT)
 
 puts p1.marking.size
 puts p2.marking.size

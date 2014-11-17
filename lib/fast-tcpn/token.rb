@@ -9,9 +9,16 @@ module FastTCPN
       @token_id = object_id
     end
 
-    def ==(o)
-      return false unless o.kind_of? Token
+    def eql?(o)
       @token_id == o.token_id
+    rescue # faster then checking for instance_of?
+      false
+    end
+
+    alias == eql?
+
+    def hash
+      @token_id
     end
 
     protected
