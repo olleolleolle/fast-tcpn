@@ -1,12 +1,23 @@
 require 'deep_clone'
 
 class Array
+
+  # This will slow down with time -- the more
+  # times we yield, the harder will be to hit
+  # an unused value. So use standerd shuffle
+  # if you need significant amount of values
+  # shuffled. But if you need just a few, this
+  # one is faster ;-)
   def lazy_shuffle
     return enum_for(:lazy_shuffle) unless block_given?
-    a = self.clone
-    a.size.times do
-      i = rand a.size
-      yield a.delete_at i
+    was = {}
+    self.size.times do
+      i = 0
+      begin
+        i = rand self.size
+      end while was.has_key?(i)
+      was[i] = true
+      yield self[i]
     end
   end
 end
