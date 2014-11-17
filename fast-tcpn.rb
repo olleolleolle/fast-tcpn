@@ -70,142 +70,148 @@
 
 require 'benchmark'
 require 'deep_clone'
+require 'fast-tcpn'
 
-class Place
+module FastTCPN
 
-  attr_reader :name
+  class Place
 
-  def initialize(name, marking = [])
-    @name = name
-    @marking = Marking.new marking
-  end
+    attr_reader :name
 
-  def marking
-    @marking
-  end
-
-  def marking_delete(token)
-    @marking.delete token
-  end
-
-  def marking_add(token)
-    @marking << token
-  end
-end
-
-class OutputArc
-  attr_reader :place, :block
-  # the +block+ will be given actual binding and
-  # must return token that should be put in the
-  # +palce+
-  def initialize(place, block)
-    @place, @block = place, block
-  end
-end
-
-class Transition
-  def initialize(name)
-    @name = name
-    @inputs = []
-    @outputs = []
-    @guard = nil
-  end
-
-  # Add input arc from the +place+.
-  # No inscruption currently possible,
-  # one token will be taken from the +place+
-  # each time the transition is fired.
-  def input(place)
-    raise "This is not a Place object!" unless place.kind_of? Place
-    @inputs << place
-  end
-
-  # Add output arc to the +place+, +block+ is the
-  # arcs inscription it will be given current binding
-  # and should return tokens that should be put in
-  # the +place+.
-  def output(place, &block)
-    raise "This is not a Place object!" unless place.kind_of? Place
-    @outputs << OutputArc.new(place, block)
-  end
-
-  # Define guard for this transition as a block.
-  # The guard block will be given markings of
-  # all input places in the form of Hash:
-  # { place_name => Array_of_tokens, ... }
-  # It must return a valid binding in the form of Hash with
-  # { place_name => token, another_place_name => another_token }
-  def guard(&block)
-    @guard = block
-  end
-
-  # fire this transition if possible
-  # returns true if fired false otherwise
-  def fire
-
-    # Marking is shuffled each time before it is
-    # used so here we can take first found binding
-    binding = @guard.call(marking_hash)
-
-    return false if binding.nil?
-    binding.each do |place_name, token|
-      find_input(place_name).marking_delete(token)
+    def initialize(name, keys = {})
+      @name = name
+      @marking = HashMarking.new keys
     end
-    @outputs.each do |o|
-      o.place.marking_add o.block.call(binding)
+
+    def marking
+      @marking
     end
-    true
+
+    def delete(token)
+      @marking.delete token
+    end
+
+    def add(token)
+      @marking << token
+    end
   end
 
-  private
-
-  def marking_hash
-    bnd = {}
-    @inputs.each do |place|
-      bnd[place.name] = place.marking.shuffle
+  class OutputArc
+    attr_reader :place, :block
+    # the +block+ will be given actual binding and
+    # must return token that should be put in the
+    # +palce+
+    def initialize(place, block)
+      @place, @block = place, block
     end
-    bnd
   end
 
-  def find_input(name)
-    @inputs.each do |place|
-      return place if place.name == name
+  class Transition
+    def initialize(name)
+      @name = name
+      @inputs = []
+      @outputs = []
+      @guard = nil
     end
-    nil
+
+    # Add input arc from the +place+.
+    # No inscruption currently possible,
+    # one token will be taken from the +place+
+    # each time the transition is fired.
+    def input(place)
+      raise "This is not a Place object!" unless place.kind_of? Place
+      @inputs << place
+    end
+
+    # Add output arc to the +place+, +block+ is the
+    # arcs inscription it will be given current binding
+    # and should return tokens that should be put in
+    # the +place+.
+    def output(place, &block)
+      raise "This is not a Place object!" unless place.kind_of? Place
+      @outputs << OutputArc.new(place, block)
+    end
+
+    # Define guard for this transition as a block.
+    # The guard block will be given markings of
+    # all input places in the form of Hash:
+    # { place_name => Array_of_tokens, ... } and
+    # a result object.
+    # It should push (<<) to the return object
+    # subsequent valid bindings in the form of Hash with
+    # { place_name => token, another_place_name => another_token }
+    def guard(&block)
+      @guard = block
+    end
+
+    # fire this transition if possible
+    # returns true if fired false otherwise
+    def fire
+
+      # Marking is shuffled each time before it is
+      # used so here we can take first found binding
+      binding = Enumerator.new do |y|
+                  @guard.call(marking_hash, y)
+                end.first
+
+      return false if binding.nil?
+      binding.each do |place_name, token|
+        find_input(place_name).delete(token)
+      end
+      @outputs.each do |o|
+        o.place.add o.block.call(binding)
+      end
+      true
+    end
+
+    private
+
+    def marking_hash
+      bnd = {}
+      @inputs.each do |place|
+        bnd[place.name] = place.marking
+      end
+      bnd
+    end
+
+    def find_input(name)
+      @inputs.each do |place|
+        return place if place.name == name
+      end
+      nil
+    end
   end
+
 end
 
 AppProcess = Struct.new(:name)
 CPU = Struct.new(:name, :process)
 
-procs = 1000.times.map { |i| AppProcess.new(i) }
-cpus = procs.map { |p| 10.times.map { |i| CPU.new("CPU#{i}_#{p.name}", p.name) } }.reduce(:+)
+p1 = FastTCPN::Place.new :process, { name: :name }
+cpu = FastTCPN::Place.new :cpu, { process: :process }
+p2 = FastTCPN::Place.new :done
 
-p1 = Place.new :process, procs
-cpu = Place.new :cpu, cpus
-p2 = Place.new :done
+10000.times do |p| 
+  p1.add AppProcess.new(p)
+  10.times.map { |c| cpu.add CPU.new("CPU#{c}_#{p}", p) }
+end
 
-t = Transition.new 'run'
+
+t = FastTCPN::Transition.new 'run'
 t.input p1
 t.input cpu
 t.output p2 do |binding|
-  binding[:process].name.to_s + "_done"
+  binding[:process].value.name.to_s + "_done"
 end
 t.output cpu do |binding|
   binding[:cpu]
 end
 
-t.guard do |marking_hash|
-  procs = {}
-  marking_hash[:process].each { |p| procs[p.name] = p }
-  catch(:found) do
-    marking_hash[:cpu].each do |c|
-      process = procs[c.process]
-      unless process.nil?
-        throw :found, {process: process, cpu: c}
-      end
+t.guard do |marking_hash, result|
+  marking_hash[:process].each do |p|
+    marking_hash[:cpu].each(:process, p.value.name).each do |c|
+      result << { process: p, cpu: c }
     end
-    nil
   end
 end
 

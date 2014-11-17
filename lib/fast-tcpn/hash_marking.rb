@@ -1,8 +1,11 @@
+require 'pry'
 module FastTCPN
 
   class HashMarking
     InvalidToken = Class.new RuntimeError
     CannotAddKeys = Class.new RuntimeError
+
+    include Enumerable
 
     attr_reader :keys
 
@@ -10,9 +13,22 @@ module FastTCPN
     # one key must be specified. The keys are used to
     # store tokens in Hashes -- one hash for each key. Thus
     # finding tokens by the keys is fast.
-    def initialize(keys)
+    def initialize(keys = {})
       @keys = keys
       @lists = {}
+      @global_list = []
+    end
+
+    def each(key = nil, value = nil)
+      return enum_for(:each, key, value) unless block_given?
+      list = if !key.nil? && !value.nil?
+               tokens_by_key key, value
+             else
+               @global_list
+             end
+      list.shuffle.each do |token|
+        yield clone token
+      end
     end
 
     def add_keys(keys)
@@ -29,13 +45,20 @@ module FastTCPN
     # Creates new token of the +object+ and 
     # adds it to the marking
     def add(object)
-      token = Token.new clone(object)
+      token = if object.kind_of? Token
+        clone object
+      else
+        Token.new clone(object)
+      end
+      @global_list << token
       each_key_with(token) do |key_name, value|
         @lists[key_name] ||= {}
         @lists[key_name][value] ||= []
         @lists[key_name][value] << token
       end
     end
+
+    alias << add
 
     # Deletes the +token+ from the marking.
     # To do it you must first find the token in
@@ -44,6 +67,7 @@ module FastTCPN
       unless token.kind_of? Token
         raise InvalidToken.new "#{token} is not a Token object!"
       end
+      @global_list.delete token
       each_key_with(token) do |key_name, value|
         next unless @lists.has_key? key_name
         next unless @lists[key_name].has_key? value
@@ -53,27 +77,31 @@ module FastTCPN
 
     # Returns number of tokens in this marking
     def size
-      @lists.values.first.values.first.size
+      @global_list.size
     rescue
       0
     end
 
+=begin
+this is obsolete... a hope!
+use each and friends instead!
 
     def method_missing(method, *args)
       unless method.to_s[0..2] == "by_"
         super
       end
-      key = method.to_s[3..-1].to_sym
-      unless @keys.has_key? key
-        super
-      end
+      key_name = method.to_s[3..-1].to_sym
       value = args[0]
-      tokens_by_key(key, value).map { |t| clone t }
+      tokens_by_key(key_name, value).map { |t| clone t }.shuffle
     end
+=end
 
     private
 
     def tokens_by_key(key_name, value)
+      unless @keys.has_key? key_name
+        raise InvalidKey.new(key_name)
+      end
       @lists[key_name][value]
     end
 

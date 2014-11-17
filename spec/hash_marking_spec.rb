@@ -54,7 +54,6 @@ describe FastTCPN::HashMarking do
 
       end
     end
-
   end
 
   describe "with tokens" do
@@ -70,9 +69,28 @@ describe FastTCPN::HashMarking do
       marking
     end
 
-    it "clones tokens before they are returned" do
-      expect(subject.by_name(wget1.name).first.object_id).not_to eq(wget1.object_id)
+    it "iterates over all tokens" do
+      expect(subject.map { |t| t.value.name }).to match_array [wget1.name, wget2.name, wget3.name]
     end
+
+    # FIXME: to small number of tokens in this test
+    # this may fail once for some time, when two
+    # shuffles return the same order of tokens...
+    it "shuffles tokens for each iteration" do
+      list1 = subject.map { |t| t.value.name }
+      list2 = subject.map { |t| t.value.name }
+      expect(list1).to match_array list2
+      expect(list1).not_to eq list2
+    end
+
+    it "iterates over selected tokens" do
+      expect(subject.each(:finished, true).map { |t| t.value.name }).to match_array [wget1.name, wget2.name]
+    end
+
+    it "clones tokens before they are returned" do
+      expect(subject.each(:name, wget1.name).first.object_id).not_to eq(wget1.object_id)
+    end
+
 
     describe "#add_keys" do
       it "raises error" do
@@ -81,6 +99,10 @@ describe FastTCPN::HashMarking do
         }.to raise_error FastTCPN::HashMarking::CannotAddKeys
       end
     end
+
+=begin
+this is obsolete... a hope!
+use each and friends instead!
 
     describe "#by_name" do
 
@@ -110,20 +132,21 @@ describe FastTCPN::HashMarking do
         end
       end
     end
+=end
 
     describe "#delete" do
       it "deletes tokens from 'name' list" do
         expect {
-          subject.delete subject.by_name(wget1.name).first
+          subject.delete subject.each(:name, wget1.name).first
         }.to change(subject, :size).by(-1)
-        expect(subject.by_name(wget1.name).map { |t| t.value }).not_to include(wget1)
+        expect(subject.each(:name, wget1.name).map { |t| t.value }).not_to include(wget1)
       end
 
       it "deletes from 'finished' list" do
         expect {
-          subject.delete subject.by_name(wget1.name).first
+          subject.delete subject.each(:name, wget1.name).first
         }.to change(subject, :size).by(-1)
-        expect(subject.by_finished(wget1.finished?)).not_to include(wget1)
+        expect(subject.each(:finished, wget1.finished?)).not_to include(wget1)
       end
     end
 
