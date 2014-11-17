@@ -72,19 +72,16 @@ require 'benchmark'
 require 'deep_clone'
 
 class Place
+
   attr_reader :name
 
   def initialize(name, marking = [])
     @name = name
-    @marking = clone marking
+    @marking = Marking.new marking
   end
 
   def marking
-    clone @marking
-  end
-
-  def marking=(m)
-    @marking = clone m
+    @marking
   end
 
   def marking_delete(token)
@@ -92,29 +89,7 @@ class Place
   end
 
   def marking_add(token)
-    @marking << clone(token)
-  end
-
-  private
-  # if you turn on this cloning, it works 5x slower...
-  # (23:06:19) Maciek: GoF book mówi że można zastosować
-  # wzorzec proxy w celu zapewnienia copy-on-write
-  # Tworząc proxy można: deep_freeze token
-  # (https://github.com/dkubb/ice_nine), potem klonować
-  # jeśli poleci wyjątek. Jaki narzut?
-  def clone(o)
-
-    # this will not work for Proc and friends...
-    # overriding it just for Proc can be tedious...
-    # This: https://github.com/balmma/ruby-deepclone
-    # has the same proble,
-    # Here is a deepclone implementation:
-    # http://stackoverflow.com/questions/8206523/how-to-create-a-deep-copy-of-an-object-in-ruby
-    # this should be easy to tweek.
-    DeepClone.clone o
-    #Marshal.load(Marshal.dump(o))
-    #o.clone
-    o
+    @marking << token
   end
 end
 
