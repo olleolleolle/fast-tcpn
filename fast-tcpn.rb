@@ -191,7 +191,7 @@ p1 = FastTCPN::Place.new :process, { name: :name }
 cpu = FastTCPN::Place.new :cpu, { process: :process }
 p2 = FastTCPN::Place.new :done
 
-10000.times do |p| 
+1_000.times do |p| 
   p1.add AppProcess.new(p)
   10.times.map { |c| cpu.add CPU.new("CPU#{c}_#{p}", p) }
 end

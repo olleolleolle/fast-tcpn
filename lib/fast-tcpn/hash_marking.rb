@@ -1,4 +1,5 @@
-require 'pry'
+require 'deep_clone'
+
 module FastTCPN
 
   class HashMarking
@@ -78,8 +79,6 @@ module FastTCPN
     # Returns number of tokens in this marking
     def size
       @global_list.size
-    rescue
-      0
     end
 
 =begin
@@ -116,9 +115,11 @@ use each and friends instead!
     end
 
     def clone(token)
-      token.clone
+      #token.clone
       #token
+      DeepClone.clone token
     end
+
   end
 
 end
