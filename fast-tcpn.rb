@@ -169,7 +169,7 @@ module FastTCPN
     # It should push (<<) to the return object
     # subsequent valid bindings in the form of Hash with
     # { place_name => token, another_place_name => another_token }
-    def sentry(&blocky)
+    def sentry(&block)
       @sentry = block
     end
 
