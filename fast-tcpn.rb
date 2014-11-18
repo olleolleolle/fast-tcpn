@@ -193,7 +193,7 @@ p1 = FastTCPN::Place.new :process, { name: :name }
 cpu = FastTCPN::Place.new :cpu, { process: :process }
 p2 = FastTCPN::Place.new :done
 
-profile = true
+profile = false
 
 10_000.times do |p| 
   p1.add AppProcess.new(p)

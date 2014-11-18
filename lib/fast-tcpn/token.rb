@@ -1,12 +1,13 @@
 module FastTCPN
 
   class Token
-
-    attr_reader :value
+    alias orig_hash hash
+    attr_reader :value, :hash, :token_id
 
     def initialize(value)
       @value = value
       @token_id = object_id
+      @hash = orig_hash
     end
 
     def eql?(o)
@@ -16,16 +17,6 @@ module FastTCPN
     end
 
     alias == eql?
-
-    def hash
-      @token_id
-    end
-
-    protected
-
-    def token_id
-      @token_id
-    end
 
   end
 
