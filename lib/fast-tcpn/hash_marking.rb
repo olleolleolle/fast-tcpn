@@ -51,7 +51,7 @@ module FastTCPN
              else
                @global_list.keys
              end
-      list.lazy_shuffle.each do |token|
+      list.lazy_shuffle do |token|
         yield clone token
       end
     end
