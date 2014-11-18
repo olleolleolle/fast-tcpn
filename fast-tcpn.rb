@@ -193,6 +193,8 @@ p1 = FastTCPN::Place.new :process, { name: :name }
 cpu = FastTCPN::Place.new :cpu, { process: :process }
 p2 = FastTCPN::Place.new :done
 
+profile = true
+
 10_000.times do |p| 
   p1.add AppProcess.new(p)
   10.times.map { |c| cpu.add CPU.new("CPU#{c}_#{p}", p) }
@@ -221,7 +223,7 @@ puts p1.marking.size
 puts p2.marking.size
 puts cpu.marking.size
 
-#RubyProf.start
+RubyProf.start if profile
 
 Benchmark.bm do |x|
   x.report do
@@ -229,10 +231,15 @@ Benchmark.bm do |x|
   end
 end
 
-#result = RubyProf.stop
-# Print a flat profile to text
-#printer = RubyProf::FlatPrinter.new(result)
-#printer.print(STDOUT)
+
+if profile
+  result = RubyProf.stop
+  # Print a flat profile to text
+  #printer = RubyProf::FlatPrinter.new(result)
+  #printer = RubyProf::FlatPrinterWithLineNumbers.new(result)
+  printer = RubyProf::GraphHtmlPrinter.new(result)
+  printer.print(STDOUT)
+end
 
 puts p1.marking.size
 puts p2.marking.size
