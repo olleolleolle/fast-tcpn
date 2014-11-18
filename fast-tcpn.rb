@@ -67,177 +67,198 @@
 # time at the expense of not significant memory overhead and insignificant 
 # complication of add/delete token operations for marking!
 #
+#
+#
+# (***) Note on efficiency (find this mark in code).
+#
+# calling
+# marking_hash[:process].each
+# without additional parameters results in need to do
+# @global_list.keys in HashMarking and to generate an
+# awfully large array. This is major cause that is blocking
+# subsequent speedup of simulation. Unfortunately this
+# array is required to enable shuffling of elements to
+# ensure fair treatment of TCPN conflicts.
+#
+# THE BELOW IS NOT TRUE -- tested it!
+# Similar situation will occcur in case of places that
+# store a lot of tokens under one key -- there we also use
+# Hash with tokens as keys and generate token list using
+# Hash#keys method. Adding and removing tokens is faster
+# in this case, especially for the large token lists.
 
 require 'benchmark'
 require 'deep_clone'
+require 'fast-tcpn'
 
-class Place
-  attr_reader :name
+require 'ruby-prof'
 
-  def initialize(name, marking = [])
-    @name = name
-    @marking = clone marking
-  end
+module FastTCPN
 
-  def marking
-    clone @marking
-  end
+  class Place
 
-  def marking=(m)
-    @marking = clone m
-  end
+    attr_reader :name
 
-  def marking_delete(token)
-    @marking.delete token
-  end
-
-  def marking_add(token)
-    @marking << clone(token)
-  end
-
-  private
-  # if you turn on this cloning, it works 5x slower...
-  # (23:06:19) Maciek: GoF book mówi że można zastosować
-  # wzorzec proxy w celu zapewnienia copy-on-write
-  # Tworząc proxy można: deep_freeze token
-  # (https://github.com/dkubb/ice_nine), potem klonować
-  # jeśli poleci wyjątek. Jaki narzut?
-  def clone(o)
-
-    # this will not work for Proc and friends...
-    # overriding it just for Proc can be tedious...
-    # This: https://github.com/balmma/ruby-deepclone
-    # has the same proble,
-    # Here is a deepclone implementation:
-    # http://stackoverflow.com/questions/8206523/how-to-create-a-deep-copy-of-an-object-in-ruby
-    # this should be easy to tweek.
-    DeepClone.clone o
-    #Marshal.load(Marshal.dump(o))
-    #o.clone
-    o
-  end
-end
-
-class OutputArc
-  attr_reader :place, :block
-  # the +block+ will be given actual binding and
-  # must return token that should be put in the
-  # +palce+
-  def initialize(place, block)
-    @place, @block = place, block
-  end
-end
-
-class Transition
-  def initialize(name)
-    @name = name
-    @inputs = []
-    @outputs = []
-    @guard = nil
-  end
-
-  # Add input arc from the +place+.
-  # No inscruption currently possible,
-  # one token will be taken from the +place+
-  # each time the transition is fired.
-  def input(place)
-    raise "This is not a Place object!" unless place.kind_of? Place
-    @inputs << place
-  end
-
-  # Add output arc to the +place+, +block+ is the
-  # arcs inscription it will be given current binding
-  # and should return tokens that should be put in
-  # the +place+.
-  def output(place, &block)
-    raise "This is not a Place object!" unless place.kind_of? Place
-    @outputs << OutputArc.new(place, block)
-  end
-
-  # Define guard for this transition as a block.
-  # The guard block will be given markings of
-  # all input places in the form of Hash:
-  # { place_name => Array_of_tokens, ... }
-  # It must return a valid binding in the form of Hash with
-  # { place_name => token, another_place_name => another_token }
-  def guard(&block)
-    @guard = block
-  end
-
-  # fire this transition if possible
-  # returns true if fired false otherwise
-  def fire
-
-    # Marking is shuffled each time before it is
-    # used so here we can take first found binding
-    binding = @guard.call(marking_hash)
-
-    return false if binding.nil?
-    binding.each do |place_name, token|
-      find_input(place_name).marking_delete(token)
+    def initialize(name, keys = {})
+      @name = name
+      @marking = HashMarking.new keys
     end
-    @outputs.each do |o|
-      o.place.marking_add o.block.call(binding)
+
+    def marking
+      @marking
     end
-    true
+
+    def delete(token)
+      @marking.delete token
+    end
+
+    def add(token)
+      @marking << token
+    end
   end
 
-  private
-
-  def marking_hash
-    bnd = {}
-    @inputs.each do |place|
-      bnd[place.name] = place.marking.shuffle
+  class OutputArc
+    attr_reader :place, :block
+    # the +block+ will be given actual binding and
+    # must return token that should be put in the
+    # +palce+
+    def initialize(place, block)
+      @place, @block = place, block
     end
-    bnd
   end
 
-  def find_input(name)
-    @inputs.each do |place|
-      return place if place.name == name
+  class Transition
+    def initialize(name)
+      @name = name
+      @inputs = []
+      @outputs = []
+      @guard = nil
     end
-    nil
+
+    # Add input arc from the +place+.
+    # No inscruption currently possible,
+    # one token will be taken from the +place+
+    # each time the transition is fired.
+    def input(place)
+      raise "This is not a Place object!" unless place.kind_of? Place
+      @inputs << place
+    end
+
+    # Add output arc to the +place+, +block+ is the
+    # arcs inscription it will be given current binding
+    # and should return tokens that should be put in
+    # the +place+.
+    def output(place, &block)
+      raise "This is not a Place object!" unless place.kind_of? Place
+      @outputs << OutputArc.new(place, block)
+    end
+
+    # Define guard for this transition as a block.
+    # The guard block will be given markings of
+    # all input places in the form of Hash:
+    # { place_name => Array_of_tokens, ... } and
+    # a result object.
+    # It should push (<<) to the return object
+    # subsequent valid bindings in the form of Hash with
+    # { place_name => token, another_place_name => another_token }
+    def guard(&block)
+      @guard = block
+    end
+
+    # fire this transition if possible
+    # returns true if fired false otherwise
+    def fire
+
+      # Marking is shuffled each time before it is
+      # used so here we can take first found binding
+      binding = Enumerator.new do |y|
+                  @guard.call(marking_hash, y)
+                end.first
+
+      return false if binding.nil?
+      binding.each do |place_name, token|
+        find_input(place_name).delete(token)
+      end
+      @outputs.each do |o|
+        o.place.add o.block.call(binding)
+      end
+      true
+    end
+
+    private
+
+    def marking_hash
+      bnd = {}
+      @inputs.each do |place|
+        bnd[place.name] = place.marking
+      end
+      bnd
+    end
+
+    def find_input(name)
+      @inputs.each do |place|
+        return place if place.name == name
+      end
+      nil
+    end
   end
+
 end
 
 AppProcess = Struct.new(:name)
 CPU = Struct.new(:name, :process)
 
-procs = 1000.times.map { |i| AppProcess.new(i) }
-cpus = procs.map { |p| 10.times.map { |i| CPU.new("CPU#{i}_#{p.name}", p.name) } }.reduce(:+)
+p1 = FastTCPN::Place.new :process, { name: :name }
+cpu = FastTCPN::Place.new :cpu, { process: :process }
+p2 = FastTCPN::Place.new :done
 
-p1 = Place.new :process, procs
-cpu = Place.new :cpu, cpus
-p2 = Place.new :done
+profile = false
 
-t = Transition.new 'run'
+10_000.times do |p| 
+  p1.add AppProcess.new(p)
+  10.times.map { |c| cpu.add CPU.new("CPU#{c}_#{p}", p) }
+end
+
+
+t = FastTCPN::Transition.new 'run'
 t.input p1
 t.input cpu
 t.output p2 do |binding|
-  binding[:process].name.to_s + "_done"
+  binding[:process].value.name.to_s + "_done"
 end
 t.output cpu do |binding|
   binding[:cpu]
 end
 
-t.guard do |marking_hash|
-  procs = {}
-  marking_hash[:process].each { |p| procs[p.name] = p }
-  catch(:found) do
-    marking_hash[:cpu].each do |c|
-      process = procs[c.process]
-      unless process.nil?
-        throw :found, {process: process, cpu: c}
-      end
+t.guard do |marking_hash, result|
+  # (***) see note on efficiency above
+  marking_hash[:process].each do |p|
+    marking_hash[:cpu].each(:process, p.value.name) do |c|
+      result << { process: p, cpu: c }
     end
-    nil
   end
 end
+
+puts p1.marking.size
+puts p2.marking.size
+puts cpu.marking.size
+
+RubyProf.start if profile
 
 Benchmark.bm do |x|
   x.report do
     {} while t.fire
   end
+end
+
+
+if profile
+  result = RubyProf.stop
+  # Print a flat profile to text
+  #printer = RubyProf::FlatPrinter.new(result)
+  #printer = RubyProf::FlatPrinterWithLineNumbers.new(result)
+  #printer = RubyProf::GraphHtmlPrinter.new(result)
+  printer.print(STDOUT)
 end
 
 puts p1.marking.size
