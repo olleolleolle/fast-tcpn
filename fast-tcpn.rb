@@ -80,12 +80,13 @@
 # array is required to enable shuffling of elements to
 # ensure fair treatment of TCPN conflicts.
 #
-# TODO: For places that under one key store a lot
-# of tokens, it may appear that operations on the arrays in
-# HashMarking cause degradation of efficiency. If so, the
-# arrays should be substituted with Hashes as it was done
-# with @global_list.
-#
+# THE BELOW IS NOT TRUE -- tested it!
+# Similar situation will occcur in case of places that
+# store a lot of tokens under one key -- there we also use
+# Hash with tokens as keys and generate token list using
+# Hash#keys method. Adding and removing tokens is faster
+# in this case, especially for the large token lists.
+
 require 'benchmark'
 require 'deep_clone'
 require 'fast-tcpn'

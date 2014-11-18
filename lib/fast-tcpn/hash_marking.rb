@@ -78,7 +78,7 @@ module FastTCPN
       @global_list[token] = true
       each_key_with(token) do |key_name, value|
         @lists[key_name] ||= {}
-        @lists[key_name][value] ||= Array.new
+        @lists[key_name][value] ||= []
         @lists[key_name][value] << token
       end
     end
