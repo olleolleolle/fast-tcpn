@@ -140,7 +140,7 @@ module FastTCPN
       @name = name
       @inputs = []
       @outputs = []
-      @guard = nil
+      @sentry = nil
     end
 
     # Add input arc from the +place+.
@@ -161,16 +161,16 @@ module FastTCPN
       @outputs << OutputArc.new(place, block)
     end
 
-    # Define guard for this transition as a block.
-    # The guard block will be given markings of
+    # Define sentry for this transition as a block.
+    # The sentry block will be given markings of
     # all input places in the form of Hash:
     # { place_name => Array_of_tokens, ... } and
     # a result object.
     # It should push (<<) to the return object
     # subsequent valid bindings in the form of Hash with
     # { place_name => token, another_place_name => another_token }
-    def guard(&block)
-      @guard = block
+    def sentry(&blocky)
+      @sentry = block
     end
 
     # fire this transition if possible
@@ -180,7 +180,7 @@ module FastTCPN
       # Marking is shuffled each time before it is
       # used so here we can take first found binding
       binding = Enumerator.new do |y|
-                  @guard.call(marking_hash, y)
+                  @sentry.call(marking_hash, y)
                 end.first
 
       return false if binding.nil?
@@ -238,7 +238,7 @@ t.output cpu do |binding|
   binding[:cpu]
 end
 
-t.guard do |marking_hash, result|
+t.sentry do |marking_hash, result|
   # (***) see note on efficiency above
   marking_hash[:process].each do |p|
     marking_hash[:cpu].each(:process, p.value.name) do |c|
