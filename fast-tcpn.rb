@@ -11,10 +11,14 @@
 # using Hashes in linear time (about n*k where k is number of
 # input places and n is number of tokens in each place) instead
 # of n**k as in case of analysing cartesian product for traditional
-# boolean guard
+# boolean guard.
+#
+# Since what we use instead of guard now is not precisely
+# what Jensen had in mind, we call it sentry, not to confuse
+# anyone.
 
 #
-# Note on clining.
+# Note on cloning.
 #
 # Branch clone_selected_tokens assumes that only tokens
 # used by the user are cloned. Here we clone whole marking
@@ -32,7 +36,11 @@
 # The above times were obtained for 1000 procs, 10 cpus for each and
 # ruby_deep_clone library.
 #
+# This library might also be worth checking:
+# https://github.com/flajann2/deep_dive/blob/master/lib/deep_dive/deep_dive.rb
 #
+#
+# THIS IS IMPLEMENTED with selective token cloning
 # Possible optimization.
 # If we could define how a place stores its marking, it would make
 # firing transition much faster. Ther would be no need to rewrite
