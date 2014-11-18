@@ -67,7 +67,25 @@
 # time at the expense of not significant memory overhead and insignificant 
 # complication of add/delete token operations for marking!
 #
-
+#
+#
+# (***) Note on efficiency (find this mark in code).
+#
+# calling
+# marking_hash[:process].each
+# without additional parameters results in need to do
+# @global_list.keys in HashMarking and to generate an
+# awfully large array. This is major cause that is blocking
+# subsequent speedup of simulation. Unfortunately this
+# array is required to enable shuffling of elements to
+# ensure fair treatment of TCPN conflicts.
+#
+# TODO: For places that under one key store a lot
+# of tokens, it may appear that operations on the arrays in
+# HashMarking cause degradation of efficiency. If so, the
+# arrays should be substituted with Hashes as it was done
+# with @global_list.
+#
 require 'benchmark'
 require 'deep_clone'
 require 'fast-tcpn'
@@ -212,6 +230,7 @@ t.output cpu do |binding|
 end
 
 t.guard do |marking_hash, result|
+  # (***) see note on efficiency above
   marking_hash[:process].each do |p|
     marking_hash[:cpu].each(:process, p.value.name) do |c|
       result << { process: p, cpu: c }
@@ -237,7 +256,7 @@ if profile
   # Print a flat profile to text
   #printer = RubyProf::FlatPrinter.new(result)
   #printer = RubyProf::FlatPrinterWithLineNumbers.new(result)
-  printer = RubyProf::GraphHtmlPrinter.new(result)
+  #printer = RubyProf::GraphHtmlPrinter.new(result)
   printer.print(STDOUT)
 end
 
