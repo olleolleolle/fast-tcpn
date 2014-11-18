@@ -46,12 +46,7 @@ module FastTCPN
 
     def each(key = nil, value = nil)
       return enum_for(:each, key, value) unless block_given?
-      list = if !key.nil? && !value.nil?
-               tokens_by_key key, value
-             else
-               @global_list.keys
-             end
-      list.lazy_shuffle do |token|
+      list_for(key, value).lazy_shuffle do |token|
         yield clone token
       end
     end
@@ -70,17 +65,7 @@ module FastTCPN
     # Creates new token of the +object+ and 
     # adds it to the marking
     def add(object)
-      token = if object.instance_of? Token
-        clone object
-      else
-        Token.new clone(object)
-      end
-      @global_list[token] = true
-      each_key_with(token) do |key_name, value|
-        @lists[key_name] ||= {}
-        @lists[key_name][value] ||= []
-        @lists[key_name][value] << token
-      end
+      add_token prepare_token(object)
     end
 
     alias << add
@@ -89,15 +74,8 @@ module FastTCPN
     # To do it you must first find the token in
     # the marking.
     def delete(token)
-      unless token.instance_of? Token
-        raise InvalidToken.new "#{token} is not a Token object!"
-      end
-      @global_list.delete token
-      each_key_with(token) do |key_name, value|
-        next unless @lists.has_key? key_name
-        next unless @lists[key_name].has_key? value
-        @lists[key_name][value].delete token
-      end
+      validate_token!(token)
+      delete_token(token)
     end
 
     # Returns number of tokens in this marking
@@ -105,19 +83,6 @@ module FastTCPN
       @global_list.size
     end
 
-=begin
-this is obsolete... a hope!
-use each and friends instead!
-
-    def method_missing(method, *args)
-      unless method.to_s[0..2] == "by_"
-        super
-      end
-      key_name = method.to_s[3..-1].to_sym
-      value = args[0]
-      tokens_by_key(key_name, value).map { |t| clone t }.shuffle
-    end
-=end
 
     private
 
@@ -144,6 +109,45 @@ use each and friends instead!
       DeepClone.clone token
     end
 
+    def prepare_token(object)
+      if object.instance_of? Token
+        clone object
+      else
+        Token.new clone(object)
+      end
+    end
+
+    def add_token(token)
+      @global_list[token] = true
+      each_key_with(token) do |key_name, value|
+        @lists[key_name] ||= {}
+        @lists[key_name][value] ||= []
+        @lists[key_name][value] << token
+      end
+    end
+
+    def validate_token!(token)
+      unless token.instance_of? Token
+        raise InvalidToken.new "#{token} is not a Token object!"
+      end
+    end
+
+    def delete_token(token)
+      @global_list.delete token
+      each_key_with(token) do |key_name, value|
+        next unless @lists.has_key? key_name
+        next unless @lists[key_name].has_key? value
+        @lists[key_name][value].delete token
+      end
+    end
+
+    def list_for(key, value)
+      if !key.nil? && !value.nil?
+        tokens_by_key key, value
+      else
+        @global_list.keys
+      end
+    end
   end
 
 end
