@@ -211,11 +211,15 @@ end
 
 t.guard do |marking_hash, result|
   marking_hash[:process].each do |p|
-    marking_hash[:cpu].each(:process, p.value.name).each do |c|
+    marking_hash[:cpu].each(:process, p.value.name) do |c|
       result << { process: p, cpu: c }
     end
   end
 end
+
+puts p1.marking.size
+puts p2.marking.size
+puts cpu.marking.size
 
 #RubyProf.start
 
