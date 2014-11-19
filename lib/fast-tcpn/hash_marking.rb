@@ -126,9 +126,14 @@ module FastTCPN
       end
     end
 
+    # reimplement if inherited classes need different one
+    def token_type
+      Token
+    end
+
     def validate_token!(token)
-      unless token.instance_of? Token
-        raise InvalidToken.new "#{token} is not a Token object!"
+      unless token.instance_of? token_type
+        raise InvalidToken.new "#{token} is not a #{token_type} object!"
       end
     end
 
