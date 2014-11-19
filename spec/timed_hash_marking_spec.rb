@@ -20,6 +20,7 @@ describe FastTCPN::TimedHashMarking do
     m.add waiting1, waiting1_timestamp
     m.add waiting1, waiting2_timestamp
     m.time = time
+    m
   end
 
   subject { marking }
@@ -35,7 +36,7 @@ describe FastTCPN::TimedHashMarking do
   end
 
   it "returns only active tokens" do
-    expect(subject.each.map { |t| t.value.name }).to match_array [ active1.name, active2.name, active3.name ]
+    expect(subject.each.map { |t| t.value.name }).to match_array [ active1.name, active2.name ]
   end
 
   describe "returns waiting tokens when time comes"  do
@@ -45,15 +46,15 @@ describe FastTCPN::TimedHashMarking do
     end
 
     it "without filter" do
-      expect(subject.each.map { |t| t.value.name }).to match_array [ active1.name, active2.name, active3.name, waiting1.name ]
+      expect(subject.each.map { |t| t.value.name }).to match_array [ active1.name, active2.name, waiting1.name ]
     end
 
     it "with name filter" do
-      expect(subject.each(:name, waiting1.name).value.name).to eq waiting1.name
+      expect(subject.each(:name, waiting1.name).first.value.name).to eq waiting1.name
     end
 
     it "with finished filter" do
-      expect(subject.each(:finished, true).value.name).to match_array [ waiting1.name, active1.name ]
+      expect(subject.each(:finished, true).map{ |t| t.value.name }).to match_array [ waiting1.name, active1.name ]
     end
   end
 
