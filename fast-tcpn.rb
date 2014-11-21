@@ -103,28 +103,6 @@ require 'ruby-prof'
 
 module FastTCPN
 
-  class Place
-
-    attr_reader :name
-
-    def initialize(name, keys = {})
-      @name = name
-      @marking = HashMarking.new keys
-    end
-
-    def marking
-      @marking
-    end
-
-    def delete(token)
-      @marking.delete token
-    end
-
-    def add(token)
-      @marking << token
-    end
-  end
-
   class OutputArc
     attr_reader :place, :block
     # the +block+ will be given actual binding and
