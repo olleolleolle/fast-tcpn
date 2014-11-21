@@ -6,11 +6,11 @@ describe FastTCPN::TimedHashMarking do
 
   let(:time) { 100 }
 
-  let(:active1) { AppProcess.new("active1", true) }
-  let(:active2) { AppProcess.new("active2", false) }
-  let(:waiting1) { AppProcess.new("waiting1", true) }
+  let(:active1) { Worker.new("active1", true) }
+  let(:active2) { Worker.new("active2", false) }
+  let(:waiting1) { Worker.new("waiting1", true) }
   let(:waiting1_timestamp) { time + 100 }
-  let(:waiting2) { AppProcess.new("waiting2", false) }
+  let(:waiting2) { Worker.new("waiting2", false) }
   let(:waiting2_timestamp) { time + 200 }
 
   let :marking do

@@ -1,4 +1,4 @@
-class AppProcess
+class Worker
   attr_reader :name
   def initialize(name, finished)
     @name, @finished = name, finished
@@ -56,9 +56,9 @@ shared_examples 'hash marking' do
 
   describe "with tokens" do
 
-    let(:wget1) { AppProcess.new :wget1, true }
-    let(:wget2) { AppProcess.new :wget2, true }
-    let(:wget3) { AppProcess.new :wget3, false }
+    let(:wget1) { Worker.new :wget1, true }
+    let(:wget2) { Worker.new :wget2, true }
+    let(:wget3) { Worker.new :wget3, false }
 
     subject do
       marking.add wget1

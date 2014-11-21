@@ -24,6 +24,10 @@ module FastTCPN
     def add_keys(keys)
       @marking.add_keys keys
     end
+
+    def keys
+      @marking.keys
+    end
   end
 
 end

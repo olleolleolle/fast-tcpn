@@ -105,9 +105,11 @@ require 'ruby-prof'
 AppProcess = Struct.new(:name)
 CPU = Struct.new(:name, :process)
 
-p1 = FastTCPN::Place.new :process, { name: :name }
-cpu = FastTCPN::Place.new :cpu, { process: :process }
-p2 = FastTCPN::Place.new :done
+tcpn = FastTCPN::TCPN.new
+
+p1 = tcpn.place :process, { name: :name }
+cpu = tcpn.place :cpu, { process: :process }
+p2 = tcpn.place :done
 
 profile = false
 
@@ -117,7 +119,7 @@ profile = false
 end
 
 
-t = FastTCPN::Transition.new 'run'
+t = tcpn.transition 'run'
 t.input p1
 t.input cpu
 t.output p2 do |binding|
@@ -144,7 +146,7 @@ RubyProf.start if profile
 
 Benchmark.bm do |x|
   x.report do
-    {} while t.fire
+    tcpn.sim
   end
 end
 

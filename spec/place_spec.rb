@@ -44,6 +44,11 @@ describe "FastTCPN::Place" do
       expect(marking).to receive(:add_keys).with(new_keys)
       subject.add_keys new_keys
     end
+
+    it "passes keys to marking" do
+      expect(marking).to receive(:keys)
+      subject.keys
+    end
   end
 
 end
