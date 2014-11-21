@@ -111,23 +111,30 @@ describe FastTCPN::TCPN do
     let(:process) { net.place :process, name: :name }
     let(:cpu) { net.place :cpu, name: :name, process: :process }
     let(:out) { net.place :out }
+    let(:finished) { net.place :finished }
 
     before do
-      t = net.transition :work
-      t.sentry do |marking_for, result|
+      t1 = net.transition :work
+      t1.sentry do |marking_for, result|
         marking_for[:process].each do |p|
           marking_for[:cpu].each(:process, p.value.name) do |c|
             result << { process: p, cpu: c }
           end
         end
       end
-      t.input process
-      t.input cpu
-      t.output out do |binding|
+      t1.input process
+      t1.input cpu
+      t1.output out do |binding|
         binding[:process].value.name + "_done"
       end
-      t.output cpu do |binding|
+      t1.output cpu do |binding|
         binding[:cpu]
+      end
+
+      t2 = net.transition :finish
+      t2.input out
+      t2.output finished do |binding|
+        binding[:out]
       end
 
       process_count.times do |p|
@@ -147,8 +154,12 @@ describe FastTCPN::TCPN do
       expect(cpu.marking.size).to eq cpu_count * process_count
     end
 
-    it "puts all tokens in out" do
-      expect(out.marking.size).to eq process_count
+    it "leaves no tokens in out" do
+      expect(out.marking.size).to eq 0
+    end
+
+    it "puts all tokens in finished" do
+      expect(finished.marking.size).to eq process_count
     end
 
 
