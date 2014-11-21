@@ -101,7 +101,7 @@ module FastTCPN
     def default_sentry
       proc do |marking_for, result|
         result << marking_for.map do |place, marking|
-          { place => marking.first }
+          { place => marking.first } unless marking.first.nil?
         end.reduce(:merge)
       end
     end

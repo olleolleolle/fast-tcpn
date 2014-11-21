@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 describe FastTCPN::Transition do
   let(:process) { :a_process }
@@ -14,6 +13,11 @@ describe FastTCPN::Transition do
   let(:in2) do
     p = FastTCPN::Place.new "cpu"
     p.add cpu
+    p
+  end
+
+  let(:empty) do
+    p = FastTCPN::Place.new "empty"
     p
   end
 
@@ -83,17 +87,28 @@ describe FastTCPN::Transition do
     end
 
 
-    it "has default sentry that lets it fire for any tokens" do
-      transition.output out do |binding|
-        binding[in1.name]
+    describe "default sentry" do
+      it "works correctly for empty input markings" do
+        transition = FastTCPN::Transition.new "disabled"
+        transition.input empty
+        transition.output out do |binding|
+          binding[empty.name]
+        end
+        expect(transition.fire).to be false
       end
-      transition.output in2 do |binding|
-        binding[in2.name]
+
+      it "lets it fire for any tokens" do
+        transition.output out do |binding|
+          binding[in1.name]
+        end
+        transition.output in2 do |binding|
+          binding[in2.name]
+        end
+        expect(transition.fire).to be true
+        expect(in1.marking).to be_empty
+        expect(in2.marking).not_to be_empty
+        expect(out.marking).not_to be_empty
       end
-      expect(transition.fire).to be true
-      expect(in1.marking).to be_empty
-      expect(in2.marking).not_to be_empty
-      expect(out.marking).not_to be_empty
     end
 
     it "raises error if sentry puts in binding invalid object in place of token" do
