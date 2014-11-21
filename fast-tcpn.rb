@@ -101,95 +101,6 @@ require 'fast-tcpn'
 
 require 'ruby-prof'
 
-module FastTCPN
-
-  class OutputArc
-    attr_reader :place, :block
-    # the +block+ will be given actual binding and
-    # must return token that should be put in the
-    # +palce+
-    def initialize(place, block)
-      @place, @block = place, block
-    end
-  end
-
-  class Transition
-    def initialize(name)
-      @name = name
-      @inputs = []
-      @outputs = []
-      @sentry = nil
-    end
-
-    # Add input arc from the +place+.
-    # No inscruption currently possible,
-    # one token will be taken from the +place+
-    # each time the transition is fired.
-    def input(place)
-      raise "This is not a Place object!" unless place.kind_of? Place
-      @inputs << place
-    end
-
-    # Add output arc to the +place+, +block+ is the
-    # arcs inscription it will be given current binding
-    # and should return tokens that should be put in
-    # the +place+.
-    def output(place, &block)
-      raise "This is not a Place object!" unless place.kind_of? Place
-      @outputs << OutputArc.new(place, block)
-    end
-
-    # Define sentry for this transition as a block.
-    # The sentry block will be given markings of
-    # all input places in the form of Hash:
-    # { place_name => Array_of_tokens, ... } and
-    # a result object.
-    # It should push (<<) to the return object
-    # subsequent valid bindings in the form of Hash with
-    # { place_name => token, another_place_name => another_token }
-    def sentry(&block)
-      @sentry = block
-    end
-
-    # fire this transition if possible
-    # returns true if fired false otherwise
-    def fire
-
-      # Marking is shuffled each time before it is
-      # used so here we can take first found binding
-      binding = Enumerator.new do |y|
-                  @sentry.call(marking_hash, y)
-                end.first
-
-      return false if binding.nil?
-      binding.each do |place_name, token|
-        find_input(place_name).delete(token)
-      end
-      @outputs.each do |o|
-        o.place.add o.block.call(binding)
-      end
-      true
-    end
-
-    private
-
-    def marking_hash
-      bnd = {}
-      @inputs.each do |place|
-        bnd[place.name] = place.marking
-      end
-      bnd
-    end
-
-    def find_input(name)
-      @inputs.each do |place|
-        return place if place.name == name
-      end
-      nil
-    end
-  end
-
-end
 
 AppProcess = Struct.new(:name)
 CPU = Struct.new(:name, :process)
@@ -216,10 +127,10 @@ t.output cpu do |binding|
   binding[:cpu]
 end
 
-t.sentry do |marking_hash, result|
+t.sentry do |marking_for, result|
   # (***) see note on efficiency above
-  marking_hash[:process].each do |p|
-    marking_hash[:cpu].each(:process, p.value.name) do |c|
+  marking_for[:process].each do |p|
+    marking_for[:cpu].each(:process, p.value.name) do |c|
       result << { process: p, cpu: c }
     end
   end

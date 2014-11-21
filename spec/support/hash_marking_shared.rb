@@ -113,6 +113,16 @@ shared_examples 'hash marking' do
         }.to change(subject, :size).by(-1)
         expect(subject.each(:finished, wget1.finished?)).not_to include(wget1)
       end
+
+      it "returns deleted token" do
+        to_delete = subject.each(:name, wget1.name).first
+        expect(subject.delete to_delete).to eq to_delete
+      end
+
+      it "returns nil if nothing was deleted" do
+        already_deleted = subject.delete subject.each(:name, wget1.name).first
+        expect(subject.delete already_deleted).to eq nil
+      end
     end
 
   end

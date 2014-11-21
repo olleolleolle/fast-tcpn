@@ -138,12 +138,13 @@ module FastTCPN
     end
 
     def delete_token(token)
-      @global_list.delete token
+      return nil unless @global_list.delete token
       each_key_with(token) do |key_name, value|
         next unless @lists.has_key? key_name
         next unless @lists[key_name].has_key? value
         @lists[key_name][value].delete token
       end
+      token
     end
 
     def list_for(key, value)
