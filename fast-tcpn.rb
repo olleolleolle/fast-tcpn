@@ -94,6 +94,14 @@
 # Hash with tokens as keys and generate token list using
 # Hash#keys method. Adding and removing tokens is faster
 # in this case, especially for the large token lists.
+#
+#
+# Not timed places causes simulator to be faster! Reason is
+# that their tokens need not be considered when looking for
+# next time to which simulator clock should be advanced to
+# enable a transition. Thus if you have a place with a lot
+# of tokens, you can gain significant speed up by making
+# this place not timed (if you can).
 
 require 'benchmark'
 require 'deep_clone'
@@ -115,8 +123,7 @@ p2 = tcpn.place :done
 
 #=begin
 p1 = tcpn.timed_place :process, { name: :name }
-## WHY is it so fast if we put not timed place here!?
-cpu = tcpn.place :cpu, { process: :process }
+cpu = tcpn.timed_place :cpu, { process: :process }
 p2 = tcpn.timed_place :done
 #=end
 
