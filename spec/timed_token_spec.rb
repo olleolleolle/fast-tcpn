@@ -24,4 +24,21 @@ describe FastTCPN::TimedToken do
     end
   end
 
+  describe "#with_timestamp" do
+    let(:t1) { token_class.new "asd", 100 }
+    let(:t2) { t1.with_timestamp 1000 }
+
+    it "returns token with the same value" do
+      expect(t2.value).to eq t1.value
+    end
+
+    it "returns token with new timestamp" do
+      expect(t2.timestamp).to eq 1000
+    end
+
+    it "returns token that is not equal to self" do
+      expect(t1 == t2).not_to be true
+    end
+  end
+
 end

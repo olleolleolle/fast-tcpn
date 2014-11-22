@@ -9,5 +9,9 @@ module FastTCPN
       @timestamp = timestamp
     end
 
+    def with_timestamp(timestamp)
+      self.class.new(value, timestamp)
+    end
+
   end
 end
