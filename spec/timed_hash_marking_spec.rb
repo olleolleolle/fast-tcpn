@@ -65,14 +65,14 @@ describe FastTCPN::TimedHashMarking do
       expect(marking.next_time).to eq waiting2_timestamp
     end
 
-    it "returns nil if no token will be available in the future" do
+    it "returns 0 if no token will be available in the future" do
       marking.time = waiting2_timestamp
-      expect(marking.next_time).to be nil
+      expect(marking.next_time).to eq 0
     end
 
-    it "returns nil for empty marking" do
+    it "returns 0 for empty marking" do
       marking = marking_class.new name: :name, finished: :finished?
-      expect(marking.next_time).to be nil
+      expect(marking.next_time).to eq 0
     end
   end
 

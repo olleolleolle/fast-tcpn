@@ -34,7 +34,8 @@ module FastTCPN
     end
 
     def next_time
-      @waiting.keys.sort.first
+      @waiting.keys.sort.first || 0
+
     end
 
     private
