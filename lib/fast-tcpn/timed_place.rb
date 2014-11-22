@@ -8,5 +8,10 @@ module FastTCPN
     def next_time
       @marking.next_time
     end
+
+    def clock=(val)
+      @marking.clock = val
+    end
+
   end
 end
