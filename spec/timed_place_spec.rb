@@ -28,4 +28,11 @@ describe FastTCPN::TimedPlace do
     expect(marking).to receive(:time=)
     subject.time = 123
   end
+
+  it "passes add with timestamp to marking" do
+    token = Worker.new(:asd, true)
+    expect(marking).to receive(:add).with(token, 100)
+    subject.add token, 100
+  end
+
 end
