@@ -58,4 +58,12 @@ describe FastTCPN::TimedHashMarking do
     end
   end
 
+  describe "#next_time" do
+    it "returns next time when a token may be available" do
+      expect(marking.next_time).to eq waiting1_timestamp
+      marking.time = waiting1_timestamp
+      expect(marking.next_time).to eq waiting2_timestamp
+    end
+  end
+
 end

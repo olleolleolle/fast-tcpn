@@ -28,8 +28,13 @@ module FastTCPN
       @waiting.keys.sort.each do |timestamp|
         break if timestamp > @time
         @waiting[timestamp].each { |token| add_token token }
+        @waiting.delete timestamp
       end
       @time
+    end
+
+    def next_time
+      @waiting.keys.sort.first
     end
 
     private
