@@ -24,8 +24,8 @@ describe FastTCPN::TimedPlace do
     expect(subject.next_time).to eq 997
   end
 
-  it "passes clock= to marking" do
-    expect(marking).to receive(:clock=)
-    subject.clock = 123
+  it "passes time= to marking" do
+    expect(marking).to receive(:time=)
+    subject.time = 123
   end
 end

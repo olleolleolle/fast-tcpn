@@ -36,7 +36,7 @@ describe FastTCPN::Transition do
 
   describe "#fire" do
     it "passes input tokens to sentry" do
-      transition.sentry do |marking_for, result|
+      transition.sentry do |marking_for, clock, result|
         expect(marking_for[in1.name].each.first.value).to eq process
         expect(marking_for[in2.name].each.first.value).to eq cpu
       end
@@ -44,8 +44,7 @@ describe FastTCPN::Transition do
     end
 
     it "passes valid binding to output arc expression" do
-      b = nil
-      transition.sentry do |marking_for, result|
+      transition.sentry do |marking_for, clock, result|
         result << { in1.name => marking_for[in1.name].first, in2.name => marking_for[in2.name].first }
       end
       transition.output out do |binding|
@@ -56,8 +55,26 @@ describe FastTCPN::Transition do
       transition.fire
     end
 
+    it "passes clock to sentry" do
+      transition.sentry do |marking_for, clock, result|
+        expect(clock).to eq 1000
+      end
+      transition.fire(1000)
+    end
+
+    it "passes clock to output arc expression" do
+      transition.sentry do |marking_for, clock, result|
+        result << { in1.name => marking_for[in1.name].first, in2.name => marking_for[in2.name].first }
+      end
+      transition.output out do |binding, clock|
+        expect(clock).to eq 1000
+        binding[in1.name]
+      end
+      transition.fire 1000
+    end
+
     it "removes marking from input places and puts in output places" do
-      transition.sentry do |marking_for, result|
+      transition.sentry do |marking_for, clock, result|
         result << { in1.name => marking_for[in1.name].first, in2.name => marking_for[in2.name].first }
       end
       transition.output out do |binding|
@@ -72,7 +89,7 @@ describe FastTCPN::Transition do
     end
 
     it "accepts nil as result of output arc expression" do
-      transition.sentry do |marking_for, result|
+      transition.sentry do |marking_for, clock, result|
         result << { in1.name => marking_for[in1.name].first, in2.name => marking_for[in2.name].first }
       end
       transition.output out do |binding|
@@ -112,14 +129,14 @@ describe FastTCPN::Transition do
     end
 
     it "raises error if sentry puts in binding invalid object in place of token" do
-      transition.sentry do |marking_for, result|
+      transition.sentry do |marking_for, clock, result|
         result << { in1.name => Object.new }
       end
       expect { transition.fire }.to raise_error FastTCPN::Transition::InvalidToken
     end
 
     it "raises error if sentry puts in binding token that not exists in place" do
-      transition.sentry do |marking_for, result|
+      transition.sentry do |marking_for, clock, result|
         result << { in1.name => marking_for[in2.name].first }
       end
       expect { transition.fire }.to raise_error FastTCPN::Transition::InvalidToken

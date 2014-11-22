@@ -54,12 +54,12 @@ module FastTCPN
 
     # fire this transition if possible
     # returns true if fired false otherwise
-    def fire
+    def fire(clock = 0)
 
       # Marking is shuffled each time before it is
       # used so here we can take first found binding
       binding = Enumerator.new do |y|
-                  @sentry.call(input_markings, y)
+                  @sentry.call(input_markings, clock, y)
                 end.first
 
       return false if binding.nil?
@@ -75,7 +75,7 @@ module FastTCPN
       end
 
       @outputs.each do |o|
-        token = o.block.call(binding)
+        token = o.block.call(binding, clock)
         o.place.add token unless token.nil?
       end
       true
@@ -99,7 +99,7 @@ module FastTCPN
     end
 
     def default_sentry
-      proc do |marking_for, result|
+      proc do |marking_for, clock, result|
         result << marking_for.map do |place, marking|
           { place => marking.first } unless marking.first.nil?
         end.reduce(:merge)

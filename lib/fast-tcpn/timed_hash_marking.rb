@@ -12,7 +12,12 @@ module FastTCPN
     end
 
     def add(object, timestamp = @time)
+      if object.instance_of? Hash
+        timestamp = object[:ts]
+        object = object[:val]
+      end
       token = prepare_token(object, timestamp)
+      timestamp = token.timestamp
       if timestamp > @time
         add_to_waiting token
       else

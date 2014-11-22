@@ -41,7 +41,7 @@ describe FastTCPN::TCPN do
 
       before do
         t1 = net.transition :work
-        t1.sentry do |marking_for, result|
+        t1.sentry do |marking_for, clock, result|
           marking_for[:process].each do |p|
             marking_for[:cpu].each(:process, p.value.name) do |c|
               result << { process: p, cpu: c }
@@ -79,7 +79,7 @@ describe FastTCPN::TCPN do
     context "with time" do
       before do
         t1 = net.transition :work
-        t1.sentry do |marking_for, result, clock|
+        t1.sentry do |marking_for, clock, result|
           marking_for[:process].each do |p|
             marking_for[:cpu].each(:process, p.value.name) do |c|
               result << { process: p, cpu: c }
@@ -92,13 +92,13 @@ describe FastTCPN::TCPN do
           { val: binding[:process].value.name + "_done", ts: clock + 10 }
         end
         t1.output cpu do |binding, clock|
-          binding[:cpu].with_time clock + 100
+          binding[:cpu].with_timestamp clock + 100
         end
 
         t2 = net.transition :finish
         t2.input out
-        t2.output finished do |binding|
-          binding[:out].with_time clock + 100
+        t2.output finished do |binding, clock|
+          binding[:out].with_timestamp clock + 100
         end
 
         process_count.times do |p|

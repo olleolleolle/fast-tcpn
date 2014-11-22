@@ -76,4 +76,18 @@ describe FastTCPN::TimedHashMarking do
     end
   end
 
+  describe "#add" do
+    it "uses token's timestamp for token" do
+      token = FastTCPN::TimedToken.new(Worker.new(:asd, true), 200)
+      expect {
+        marking.add token
+      }.not_to change(marking, :size)
+    end
+
+    it "uses given timestamp for object" do
+      expect {
+        marking.add Worker.new(:asd, true), time
+      }.to change(marking, :size).by(1)
+    end
+  end
 end
