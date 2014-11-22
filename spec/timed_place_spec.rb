@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe FastTCPN::TimedPlace, focus:true do
+describe FastTCPN::TimedPlace do
 
   let(:place_class) { FastTCPN::TimedPlace }
   let(:marking_class) { FastTCPN::TimedHashMarking }
