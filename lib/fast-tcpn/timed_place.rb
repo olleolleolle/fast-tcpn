@@ -4,5 +4,9 @@ module FastTCPN
       super
       @marking = TimedHashMarking.new keys
     end
+
+    def next_time
+      @marking.next_time
+    end
   end
 end
