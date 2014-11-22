@@ -107,9 +107,18 @@ CPU = Struct.new(:name, :process)
 
 tcpn = FastTCPN::TCPN.new
 
+=begin
 p1 = tcpn.place :process, { name: :name }
 cpu = tcpn.place :cpu, { process: :process }
 p2 = tcpn.place :done
+=end
+
+#=begin
+p1 = tcpn.timed_place :process, { name: :name }
+## WHY is it so fast if we put not timed place here!?
+cpu = tcpn.place :cpu, { process: :process }
+p2 = tcpn.timed_place :done
+#=end
 
 profile = false
 
@@ -129,7 +138,7 @@ t.output cpu do |binding|
   binding[:cpu]
 end
 
-t.sentry do |marking_for, result|
+t.sentry do |marking_for, clock, result|
   # (***) see note on efficiency above
   marking_for[:process].each do |p|
     marking_for[:cpu].each(:process, p.value.name) do |c|
@@ -146,7 +155,8 @@ RubyProf.start if profile
 
 Benchmark.bm do |x|
   x.report do
-    tcpn.sim
+    #tcpn.sim
+    {} while t.fire
   end
 end
 
@@ -154,7 +164,7 @@ end
 if profile
   result = RubyProf.stop
   # Print a flat profile to text
-  #printer = RubyProf::FlatPrinter.new(result)
+  printer = RubyProf::FlatPrinter.new(result)
   #printer = RubyProf::FlatPrinterWithLineNumbers.new(result)
   #printer = RubyProf::GraphHtmlPrinter.new(result)
   printer.print(STDOUT)

@@ -1,6 +1,7 @@
 require 'pry'
 module FastTCPN
   class TCPN
+    PlaceTypeDoesNotMach = Class.new RuntimeError
 
     class Clock
       def initialize
@@ -21,18 +22,19 @@ module FastTCPN
 
     def initialize
       @places = {}
+      @timed_places = {}
       @transitions = []
       @clock = Clock.new
     end
 
     def place(name, keys = {})
-      place = @places[name]
-      if place.nil?
-        place = TimedPlace.new name, keys
-      else
-        place.add_keys keys
-      end
-      @places[name] = place
+      create_or_find_place(name, keys, Place)
+    end
+
+    def timed_place(name, keys = {})
+      place = create_or_find_place(name, keys, TimedPlace)
+      @timed_places[place] = true
+      place
     end
 
     def transition(name)
@@ -69,6 +71,19 @@ module FastTCPN
 
     private
 
+    def create_or_find_place(name, keys, type)
+      place = @places[name]
+      if place.nil?
+        place = type.new name, keys
+      else
+        unless type == place.class
+          raise PlaceTypeDoesNotMatch.new "You tried to create place #{name} of type #{type}, but it already exsists and has type #{place.class}"
+        end
+        place.add_keys keys
+      end
+      @places[name] = place
+    end
+
     def move_clock_to(val)
       return false unless @clock.set val
       @places.each do |name, place|
@@ -93,7 +108,7 @@ module FastTCPN
 
     def find_next_time
       time = 0
-      @places.each do |name, place|
+      @timed_places.each_key do |place|
         next_time = place.next_time
         if next_time > clock && (time == 0 || next_time < time)
           time = next_time

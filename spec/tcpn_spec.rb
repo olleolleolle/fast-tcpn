@@ -1,8 +1,7 @@
 require 'spec_helper'
 
 describe FastTCPN::TCPN do
-  describe "#place" do
-
+  shared_examples "place handler" do
     context "if place does not exist" do
 
       it "creates new place" do
@@ -43,6 +42,23 @@ describe FastTCPN::TCPN do
         expect(subject.place("cpus", valid: :valid?).keys).to eq({ name: :name, node: :node, valid: :valid? })
       end
 
+    end
+
+  end
+
+  describe "#place" do
+    it_behaves_like 'place handler'
+
+    it "creates Place" do
+      expect(subject.place("new one").class).to be FastTCPN::Place
+    end
+  end
+
+  describe "#timed_place" do
+    it_behaves_like 'place handler'
+
+    it "creates TimedPlace" do
+      expect(subject.timed_place("new one").class).to be FastTCPN::TimedPlace
     end
   end
 

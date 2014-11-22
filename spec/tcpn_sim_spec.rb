@@ -13,11 +13,6 @@ describe FastTCPN::TCPN do
     let(:process_count) { 10 }
     let(:cpu_count) { 10 }
 
-    let(:process) { net.place :process, name: :name }
-    let(:cpu) { net.place :cpu, name: :name, process: :process }
-    let(:out) { net.place :out }
-    let(:finished) { net.place :finished }
-
     shared_examples "correctly moves tokens" do
 
       it "removes all tokens from process" do
@@ -38,6 +33,12 @@ describe FastTCPN::TCPN do
     end
 
     context "without time" do
+
+      let(:process) { net.place :process, name: :name }
+      let(:cpu) { net.place :cpu, name: :name, process: :process }
+      let(:out) { net.place :out }
+      let(:finished) { net.place :finished }
+
 
       before do
         t1 = net.transition :work
@@ -77,6 +78,12 @@ describe FastTCPN::TCPN do
     end
 
     context "with time" do
+
+      let(:process) { net.timed_place :process, name: :name }
+      let(:cpu) { net.timed_place :cpu, name: :name, process: :process }
+      let(:out) { net.timed_place :out }
+      let(:finished) { net.timed_place :finished }
+
       before do
         t1 = net.transition :work
         t1.sentry do |marking_for, clock, result|
