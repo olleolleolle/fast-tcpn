@@ -111,10 +111,10 @@ module FastTCPN
     end
 
     def prepare_token(object)
-      if object.instance_of? Token
+      if object.instance_of? token_type
         clone object
       else
-        Token.new clone(object)
+        token_type.new clone(object)
       end
     end
 

@@ -115,19 +115,23 @@ CPU = Struct.new(:name, :process)
 
 tcpn = FastTCPN::TCPN.new
 
-=begin
-p1 = tcpn.place :process, { name: :name }
-cpu = tcpn.place :cpu, { process: :process }
-p2 = tcpn.place :done
-=end
-
-#=begin
-p1 = tcpn.timed_place :process, { name: :name }
-cpu = tcpn.timed_place :cpu, { process: :process }
-p2 = tcpn.timed_place :done
-#=end
-
 profile = false
+timed = true
+
+p1 = cpu = p2 = nil
+
+if timed
+  puts "Timed places"
+  p1 = tcpn.timed_place :process, { name: :name }
+  cpu = tcpn.timed_place :cpu, { process: :process }
+  p2 = tcpn.timed_place :done
+else
+  puts "Not timed places"
+  p1 = tcpn.place :process, { name: :name }
+  cpu = tcpn.place :cpu, { process: :process }
+  p2 = tcpn.place :done
+end
+
 
 10_000.times do |p| 
   p1.add AppProcess.new(p)
