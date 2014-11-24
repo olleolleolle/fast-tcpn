@@ -43,6 +43,24 @@ shared_examples "valid place" do
       expect(marking).to receive(:keys)
       subject.keys
     end
+
+    describe "net callback" do
+      let(:net) { double Object, call_callbacks: nil  }
+      let :place do
+        place_class.new "process", {}, net
+      end
+
+      it "is called on :add" do
+        expect(net).to receive(:call_callbacks).with(:place, :add, anything())
+        place.add token
+      end
+
+      it "is called on :delete" do
+        expect(net).to receive(:call_callbacks).with(:place, :delete, anything())
+        allow(marking).to receive(:delete)
+        place.delete token
+      end
+    end
   end
 
 end

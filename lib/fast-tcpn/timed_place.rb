@@ -1,6 +1,6 @@
 module FastTCPN
   class TimedPlace < Place
-    def initialize(name, keys = {})
+    def initialize(name, keys = {}, net = nil)
       super
       @marking = TimedHashMarking.new keys
     end
@@ -14,6 +14,7 @@ module FastTCPN
     end
 
     def add(token, timestamp = nil)
+      @net.call_callbacks(:place, :add, Event.new(@name, [token])) unless @net.nil?
       if timestamp.nil?
         @marking.add token
       else
