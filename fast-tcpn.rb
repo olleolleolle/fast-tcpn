@@ -116,7 +116,7 @@ CPU = Struct.new(:name, :process)
 tcpn = FastTCPN::TCPN.new
 
 profile = false
-timed = false
+timed = true
 
 p1 = cpu = p2 = nil
 

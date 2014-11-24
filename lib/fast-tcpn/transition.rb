@@ -15,11 +15,14 @@ module FastTCPN
 
     attr_reader :name
 
-    def initialize(name)
+    Event = Struct.new(:transition, :binding, :clock)
+
+    def initialize(name, net = nil)
       @name = name
       @inputs = []
       @outputs = []
       @sentry = default_sentry
+      @net = net
     end
 
     # Add input arc from the +place+.
@@ -64,6 +67,8 @@ module FastTCPN
 
       return false if binding.nil?
 
+      call_callbacks :before, Event.new(@name, binding, clock)
+
       binding.each do |place_name, token|
         unless token.kind_of? Token
           raise InvalidToken.new("#{token.inspect} put by sentry for transition `#{name}` in binding for `#{place_name}`")
@@ -78,10 +83,18 @@ module FastTCPN
         token = o.block.call(binding, clock)
         o.place.add token unless token.nil?
       end
+
+      call_callbacks :after, Event.new(@name, binding, clock)
+
       true
     end
 
     private
+
+    def call_callbacks(event, event_object)
+      return if @net.nil?
+      @net.call_callbacks(:transition, event, event_object)
+    end
 
     def input_markings
       bnd = {}

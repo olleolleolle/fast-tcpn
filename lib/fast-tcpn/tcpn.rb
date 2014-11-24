@@ -25,6 +25,10 @@ module FastTCPN
       @timed_places = {}
       @transitions = []
       @clock = Clock.new
+      @callbacks = {
+        transition: { before: [], after: [] },
+        place: { add: [], remove: [] }
+      }
     end
 
     def place(name, keys = {})
@@ -40,7 +44,7 @@ module FastTCPN
     def transition(name)
       t = @transitions.select { |t| t.name == name }.first
       if t.nil?
-        t = Transition.new name
+        t = Transition.new name, self
         @transitions << t
       end
       t
@@ -69,7 +73,32 @@ module FastTCPN
       @clock.get
     end
 
+    def cb_for(what, event = nil, &block)
+      if what == :transition
+        cb_for_transition event, &block
+      elsif what == :place
+      else
+        raise InvalidCallback.new "Don't know how to add callback for #{what}"
+      end
+    end
+
+    def call_callbacks(what, event, *params)
+      @callbacks[what][event].each do |block|
+        block.call event, *params
+      end
+    end
+
+
     private
+
+    def cb_for_transition(event, &block)
+      if event == :before || event.nil?
+        @callbacks[:transition][:before] << block
+      end
+      if event == :after || event.nil?
+        @callbacks[:transition][:after] << block
+      end
+    end
 
     def create_or_find_place(name, keys, type)
       place = @places[name]
@@ -86,7 +115,7 @@ module FastTCPN
 
     def move_clock_to(val)
       return false unless @clock.set val
-      @places.each do |name, place|
+      @timed_places.each_key do |place|
         place.time = val
       end
       true

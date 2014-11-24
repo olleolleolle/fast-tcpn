@@ -128,6 +128,26 @@ describe FastTCPN::Transition do
       end
     end
 
+    describe "callbacks" do
+      let(:net) { double Object, call_callbacks: nil  }
+      let :transition do
+        t = FastTCPN::Transition.new :working, net
+        t.input in1
+        t.input in2
+        t
+      end
+
+      it "calls before callbacks on its net" do
+        expect(net).to receive(:call_callbacks).with(:transition, :before, anything()).once
+        transition.fire
+      end
+
+      it "calls after callbacks on its net" do
+        expect(net).to receive(:call_callbacks).with(:transition, :after, anything()).once
+        transition.fire
+      end
+    end
+
     it "raises error if sentry puts in binding invalid object in place of token" do
       transition.sentry do |marking_for, clock, result|
         result << { in1.name => Object.new }
