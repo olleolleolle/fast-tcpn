@@ -76,9 +76,15 @@ shared_examples 'hash marking' do
     # shuffles return the same order of tokens...
     it "shuffles tokens for each iteration" do
       list1 = subject.map { |t| t.value.name }
-      list2 = subject.map { |t| t.value.name }
-      expect(list1).to match_array list2
-      expect(list1).not_to eq list2
+      equal_lists = 0
+      10.times do
+        list2 = subject.map { |t| t.value.name }
+        expect(list1).to match_array list2
+        if list1 == list2
+          equal_lists += 1
+        end
+      end
+      expect(equal_lists).to be < 10
     end
 
     it "iterates over selected tokens" do
