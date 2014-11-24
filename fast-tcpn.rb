@@ -116,7 +116,7 @@ CPU = Struct.new(:name, :process)
 tcpn = FastTCPN::TCPN.new
 
 profile = false
-timed = true
+timed = false
 
 p1 = cpu = p2 = nil
 
@@ -166,8 +166,8 @@ RubyProf.start if profile
 
 Benchmark.bm do |x|
   x.report do
-    #tcpn.sim
-    {} while t.fire
+    tcpn.sim
+#    {} while t.fire
   end
 end
 

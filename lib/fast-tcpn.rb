@@ -1,6 +1,7 @@
 require 'fast-tcpn/place'
 require 'fast-tcpn/timed_place'
 require 'fast-tcpn/transition'
+require 'fast-tcpn/clone'
 require 'fast-tcpn/hash_marking'
 require 'fast-tcpn/timed_hash_marking'
 require 'fast-tcpn/token'

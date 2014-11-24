@@ -1,5 +1,3 @@
-require 'deep_clone'
-
 class Array
 
   # This will slow down with time -- the more
@@ -25,6 +23,8 @@ end
 module FastTCPN
 
   class HashMarking
+
+    include Clone
 
 
     InvalidToken = Class.new RuntimeError
@@ -102,12 +102,6 @@ module FastTCPN
         value = token.value.send(method)
         yield name, value
       end
-    end
-
-    def clone(token)
-      #token.clone
-      #token
-      DeepClone.clone token
     end
 
     def prepare_token(object)
