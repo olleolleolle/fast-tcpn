@@ -28,6 +28,10 @@ module FastTCPN
     def keys
       @marking.keys
     end
+
+    def inspect
+      "<#{self.class} name: #{name.inspect}>"
+    end
   end
 
 end
