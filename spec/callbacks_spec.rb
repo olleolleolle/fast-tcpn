@@ -9,7 +9,7 @@ describe FastTCPN::TCPN do
       t = m.transition 'send'
       t.input p1
       t.output p2 do |binding, clock|
-        binding[:input]
+        binding['input']
       end
       p1.add :data_package, 100
       m
@@ -47,6 +47,31 @@ describe FastTCPN::TCPN do
         include_examples "calls callbacks"
       end
 
+    end
+
+    describe "for place" do
+      it "is called when token is removed" do
+        called = 0
+        tcpn.cb_for :place, :remove do |tag, event|
+          expect(tag).to eq :remove
+          expect(event.place).to eq 'input'
+          expect(event.tokens.first.value).to eq :data_package
+          called += 1
+        end
+        tcpn.sim
+        expect(called).to eq 1
+      end
+
+      it "is called when token is added" do
+        called = 0
+        tcpn.cb_for :place, :add do |tag, event|
+          expect(tag).to eq :add
+          expect(event.place).to eq 'output'
+          called += 1
+        end
+        tcpn.sim
+        expect(called).to eq 1
+      end
     end
   end
 end

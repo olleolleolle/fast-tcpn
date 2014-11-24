@@ -1,4 +1,3 @@
-require 'pry'
 module FastTCPN
   class TCPN
     PlaceTypeDoesNotMach = Class.new RuntimeError
@@ -77,6 +76,7 @@ module FastTCPN
       if what == :transition
         cb_for_transition event, &block
       elsif what == :place
+        cb_for_place event, &block
       else
         raise InvalidCallback.new "Don't know how to add callback for #{what}"
       end
@@ -100,10 +100,19 @@ module FastTCPN
       end
     end
 
+    def cb_for_place(event, &block)
+      if event == :add || event.nil?
+        @callbacks[:place][:add] << block
+      end
+      if event == :remove || event.nil?
+        @callbacks[:place][:remove] << block
+      end
+    end
+
     def create_or_find_place(name, keys, type)
       place = @places[name]
       if place.nil?
-        place = type.new name, keys
+        place = type.new name, keys, self
       else
         unless type == place.class
           raise PlaceTypeDoesNotMatch.new "You tried to create place #{name} of type #{type}, but it already exsists and has type #{place.class}"

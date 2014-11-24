@@ -2,7 +2,7 @@ module FastTCPN
 
   class Place
 
-    Event = Struct.new(:place, :tokens)
+    Event = Struct.new(:place, :tokens, :tcpn)
 
     attr_reader :name
 
@@ -17,12 +17,12 @@ module FastTCPN
     end
 
     def delete(token)
-      @net.call_callbacks(:place, :delete, Event.new(@name, [token])) unless @net.nil?
+      @net.call_callbacks(:place, :remove, Event.new(@name, [token], @net)) unless @net.nil?
       @marking.delete token
     end
 
     def add(token)
-      @net.call_callbacks(:place, :add, Event.new(@name, [token])) unless @net.nil?
+      @net.call_callbacks(:place, :add, Event.new(@name, [token], @net)) unless @net.nil?
       @marking.add token
     end
 

@@ -15,7 +15,7 @@ module FastTCPN
 
     attr_reader :name
 
-    Event = Struct.new(:transition, :binding, :clock)
+    Event = Struct.new(:transition, :binding, :clock, :tcpn)
 
     def initialize(name, net = nil)
       @name = name
@@ -67,7 +67,7 @@ module FastTCPN
 
       return false if binding.nil?
 
-      call_callbacks :before, Event.new(@name, binding, clock)
+      call_callbacks :before, Event.new(@name, binding, clock, @net)
 
       binding.each do |place_name, token|
         unless token.kind_of? Token
@@ -84,7 +84,7 @@ module FastTCPN
         o.place.add token unless token.nil?
       end
 
-      call_callbacks :after, Event.new(@name, binding, clock)
+      call_callbacks :after, Event.new(@name, binding, clock, @net)
 
       true
     end

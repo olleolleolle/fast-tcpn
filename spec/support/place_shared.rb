@@ -55,8 +55,8 @@ shared_examples "valid place" do
         place.add token
       end
 
-      it "is called on :delete" do
-        expect(net).to receive(:call_callbacks).with(:place, :delete, anything())
+      it "is called on :remove" do
+        expect(net).to receive(:call_callbacks).with(:place, :remove, anything())
         allow(marking).to receive(:delete)
         place.delete token
       end
