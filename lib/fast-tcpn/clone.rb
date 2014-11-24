@@ -1,11 +1,4 @@
-require 'deep_clone'
-
-module FastTCPN
-  module Clone
-    def clone(token)
-      #token.clone
-      #token
-      DeepClone.clone token
-    end
-  end
-end
+#require 'fast-tcpn/clone/using_deep_clone'
+#require 'fast-tcpn/clone/using_deep_dive'
+#require 'fast-tcpn/clone/using_marshal'
+require 'fast-tcpn/clone/using_code_from_stack'

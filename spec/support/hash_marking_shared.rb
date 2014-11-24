@@ -126,5 +126,42 @@ shared_examples 'hash marking' do
     end
 
   end
+
+  it "works for Symbols" do
+    expect {
+      marking_class.new.add :asd
+    }.not_to raise_error
+  end
+
+  it "works for Procs" do
+    expect {
+      marking_class.new.add(proc {})
+    }.not_to raise_error
+  end
+
+  it "works for Fixnums" do
+    expect {
+      marking_class.new.add(123)
+    }.not_to raise_error
+  end
+
+  Klazz = Struct.new(:name, :id)
+  it "works for Structs" do
+    expect {
+      marking_class.new.add(Klazz.new)
+    }.not_to raise_error
+  end
+
+  it "works for anonymous Structs" do
+    expect {
+      marking_class.new.add(Struct.new(:name, :id).new)
+    }.not_to raise_error
+  end
+
+  it "works for nil" do
+    expect {
+      marking_class.new.add(nil)
+    }.not_to raise_error
+  end
 end
 
