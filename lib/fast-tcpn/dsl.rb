@@ -21,6 +21,38 @@ module FastTCPN
     Docile.dsl_eval(DSL::TCPNDSL.new(tcpn, file), &block)
   end
 
+  # This module implements DSL to easily create TCPN models.
+  # The model consists of pages that have places and transitions.
+  # Places are repsesented by their names and the same place can
+  # appear on numerous pages. Every page can consist of subsequent
+  # pages. Pages can be loaded to the model from other files.
+  #
+  # DSL models can be loaded from external files using FastTCPN.read method
+  # or interpreted directly from core using FastTCPN.model method. Both methods
+  # return created model as TCPN object. You can then use TCPN class API to set
+  # markings, test markings, define callbacks and run simulation.
+  #
+  # Example:
+  #
+  # File: model/top.rb
+  #       page "top" do
+  #         sub_page "process.rb"
+  #       end
+  #
+  # File: model/process.rb
+  #       page "process" do
+  #          process = timed_place :process, { name: :name }
+  #          done = timed_place :done { name: :name }
+  #
+  #          transition "work" do
+  #             input process
+  #             output done do |binding, clock|
+  #               binding[:process].with_time clock + 100
+  #             end
+  #           end
+  #        end
+  #
+  # Calling TCPN.read 'model/top.rb' will load whole model and return as TCPN object.
   module DSL
 
     # Represents and encapsulates all errors that will occur while

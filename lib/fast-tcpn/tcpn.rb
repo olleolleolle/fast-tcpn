@@ -2,8 +2,8 @@ module FastTCPN
 
   # This class represents TCPN model: places, transitions, arcs
   class TCPN
-    PlaceTypeDoesNotMach = Class.new RuntimeError
 
+    PlaceTypeDoesNotMach = Class.new RuntimeError
 
     class Clock
       # :nodoc:
