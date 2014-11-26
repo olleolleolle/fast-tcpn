@@ -1,10 +1,19 @@
 require 'docile'
 
 module FastTCPN
-  def self.model(&block)
+  def self.model(file = nil, &block)
     tcpn = TCPN.new
-    Docile.dsl_eval(DSL::TCPNDSL.new(tcpn), &block)
+    load_model tcpn, file, &block
     tcpn
+  end
+
+  def self.read(file)
+    block = instance_eval "proc { #{File.read file} }", file
+    model file, &block
+  end
+
+  def self.load_model(tcpn, file, &block)
+    Docile.dsl_eval(DSL::TCPNDSL.new(tcpn, file), &block)
   end
 
   module DSL
@@ -19,7 +28,7 @@ module FastTCPN
       end
 
       def inspect
-        "#{@cause.inspect} on TCPN page: `#{@page}`"
+        "<#{self.class} #{@cause.inspect} on TCPN page: `#{@page}`>"
       end
 
       def message
@@ -28,21 +37,23 @@ module FastTCPN
     end
 
     class TCPNDSL
-      def initialize(tcpn)
+      def initialize(tcpn, file)
         @tcpn = tcpn
+        @file = file
       end
 
       def page(name, &block)
-        Docile.dsl_eval(PageDSL.new(@tcpn, self), &block)
+        Docile.dsl_eval(PageDSL.new(@tcpn, self, @file), &block)
       rescue StandardError => e
         raise DSLError.new e, name
       end
     end
 
     class PageDSL
-      def initialize(tcpn, dsl)
+      def initialize(tcpn, dsl, file)
         @tcpn = tcpn
         @dsl = dsl
+        @file = file
       end
 
       def place(name, keys = {})
@@ -61,6 +72,12 @@ module FastTCPN
 
       def page(name, &block)
         @dsl.page name, &block
+      end
+
+      def sub_page(file)
+        file = File.expand_path(file, File.dirname(@file)) unless @file.nil?
+        block = instance_eval "proc { #{File.read file} }", file
+        FastTCPN.load_model @tcpn, file, &block
       end
     end
 
