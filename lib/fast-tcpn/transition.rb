@@ -21,7 +21,7 @@ module FastTCPN
       @name = name
       @inputs = []
       @outputs = []
-      @sentry = default_sentry
+      @sentry = nil
       @net = net
     end
 
@@ -62,7 +62,7 @@ module FastTCPN
       # Marking is shuffled each time before it is
       # used so here we can take first found binding
       binding = Enumerator.new do |y|
-                  @sentry.call(input_markings, clock, y)
+                  get_sentry.call(input_markings, clock, y)
                 end.first
 
       return false if binding.nil?
@@ -89,7 +89,23 @@ module FastTCPN
       true
     end
 
+    def default_sentry?
+      @sentry.nil?
+    end
+
+    def inputs_size
+      @inputs.size
+    end
+
+    def outputs_size
+      @outputs.size
+    end
+
     private
+
+    def get_sentry
+      @sentry || default_sentry
+    end
 
     def call_callbacks(event, event_object)
       return if @net.nil?

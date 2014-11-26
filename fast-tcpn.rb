@@ -113,49 +113,55 @@ require 'ruby-prof'
 AppProcess = Struct.new(:name)
 CPU = Struct.new(:name, :process)
 
-tcpn = FastTCPN::TCPN.new
 
 profile = false
-timed = true
+timed = false
 
-p1 = cpu = p2 = nil
+tcpn = FastTCPN.model do
 
-if timed
-  puts "Timed places"
-  p1 = tcpn.timed_place :process, { name: :name }
-  cpu = tcpn.timed_place :cpu, { process: :process }
-  p2 = tcpn.timed_place :done
-else
-  puts "Not timed places"
-  p1 = tcpn.place :process, { name: :name }
-  cpu = tcpn.place :cpu, { process: :process }
-  p2 = tcpn.place :done
+  page "Benchmark model" do
+    if timed
+      puts "Timed places"
+      p1 = timed_place :process, { name: :name }
+      cpu = timed_place :cpu, { process: :process }
+      p2 = timed_place :done
+    else
+      puts "Not timed places"
+      p1 = place :process, { name: :name }
+      cpu = place :cpu, { process: :process }
+      p2 = place :done
+    end
+
+    transition 'run' do
+      input p1
+      input cpu
+      output p2 do |binding|
+        binding[:process].value.name.to_s + "_done"
+      end
+      output cpu do |binding|
+        binding[:cpu]
+      end
+
+      sentry do |marking_for, clock, result|
+        # (***) see note on efficiency above
+        marking_for[:process].each do |p|
+          marking_for[:cpu].each(:process, p.value.name) do |c|
+            result << { process: p, cpu: c }
+          end
+        end
+      end
+    end
+  end
 end
 
+
+p1 = tcpn.find_place(:process)
+p2 = tcpn.find_place(:done)
+cpu = tcpn.find_place(:cpu)
 
 10_000.times do |p| 
   p1.add AppProcess.new(p)
   10.times.map { |c| cpu.add CPU.new("CPU#{c}_#{p}", p) }
-end
-
-
-t = tcpn.transition 'run'
-t.input p1
-t.input cpu
-t.output p2 do |binding|
-  binding[:process].value.name.to_s + "_done"
-end
-t.output cpu do |binding|
-  binding[:cpu]
-end
-
-t.sentry do |marking_for, clock, result|
-  # (***) see note on efficiency above
-  marking_for[:process].each do |p|
-    marking_for[:cpu].each(:process, p.value.name) do |c|
-      result << { process: p, cpu: c }
-    end
-  end
 end
 
 puts p1.marking.size

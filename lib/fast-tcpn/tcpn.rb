@@ -41,7 +41,7 @@ module FastTCPN
     end
 
     def transition(name)
-      t = @transitions.select { |t| t.name == name }.first
+      t = find_transition name
       if t.nil?
         t = Transition.new name, self
         @transitions << t
@@ -51,6 +51,10 @@ module FastTCPN
 
     def find_place(name)
       @places[name]
+    end
+
+    def find_transition(name)
+      @transitions.select { |t| t.name == name }.first
     end
 
     def places_count

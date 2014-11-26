@@ -128,6 +128,34 @@ describe FastTCPN::Transition do
       end
     end
 
+    describe "#default_sentry?" do
+      it "is true if transition has no custom sentry" do
+        transition = FastTCPN::Transition.new "work"
+        expect(transition.default_sentry?).to be true
+      end
+      it "is false if transition has a custom sentry" do
+        transition = FastTCPN::Transition.new "work"
+        transition.sentry {}
+        expect(transition.default_sentry?).to be false
+      end
+    end
+
+    describe "#inputs_size" do
+      it "counts input arcs" do
+        expect{
+          transition.input out
+        }.to change(transition, :inputs_size).from(2).to(3)
+      end
+    end
+
+    describe "#outputs_size" do
+      it "counts output arcs" do
+        expect{
+          transition.output out {}
+        }.to change(transition, :outputs_size).from(0).to(1)
+      end
+    end
+
     describe "callbacks" do
       let(:net) { double Object, call_callbacks: nil  }
       let :transition do
