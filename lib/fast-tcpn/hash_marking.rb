@@ -39,12 +39,28 @@ module FastTCPN
     # one key must be specified. The keys are used to
     # store tokens in Hashes -- one hash for each key. Thus
     # finding tokens by the keys is fast.
+    #
+    # +keys+ is a hash of the form: { key_name => method }, where +key_name+ is a name that
+    # will be used to access tokens indexed by this key and +method+ is a method that should
+    # be called on token's value to get value that should be used group tokens indexed by this key.
     def initialize(keys = {})
       @keys = keys
       @lists = {}
       @global_list = {}
     end
 
+    # Allows to iterate over all values in marking or over all values for which
+    # specified +key+ has specified +value+. If no block is given, returns adequate
+    # Enumerator. Yielded values are deep-cloned so you can use them without fear of
+    # interfering with TCPN simulation.
+    #
+    # Values are yielded in random order -- each time each is called with block
+    # or a new Enumerator is created, the order is changed. Thus tokens are selection 
+    # is `in some sense fair`. Current implementation assumes, that in most cases iteration
+    # will finish quickly, without yielding large number of tokens. In such cases the 
+    # shuffling algorithm is efficient. But if for some reason most tokens from marking
+    # should be yielded, it will be less and less efficient, with every nxt token. In this
+    # case one should consider using standard +shuffle+ method here instead of +lazy_shuffle+.
     def each(key = nil, value = nil)
       return enum_for(:each, key, value) unless block_given?
       list_for(key, value).lazy_shuffle do |token|
@@ -52,6 +68,9 @@ module FastTCPN
       end
     end
 
+    # Add new keys to this marking. This list will be merged with exisiting keys.
+    # Adding keys is possible only if marking is empty, otherwise CannotAddKeys 
+    # exception will be raised.
     def add_keys(keys)
       unless empty?
         raise CannotAddKeys.new("marking not empty!");
@@ -59,12 +78,16 @@ module FastTCPN
       @keys.merge!(keys)
     end
 
+    # True if the marking is empty.
     def empty?
       size == 0
     end
 
-    # Creates new token of the +object+ and 
-    # adds it to the marking
+    # Creates new token of the +object+ and adds it to the marking.
+    # Objects added to the marking are deep-cloned, so you can use them
+    # without fear to interfere with TCPN simulation. But have it in mind!
+    # If you put a large object with a lot of references in the marking,
+    # it will significanntly slow down simulation and increase memory usage.
     def add(object)
       add_token prepare_token(object)
     end

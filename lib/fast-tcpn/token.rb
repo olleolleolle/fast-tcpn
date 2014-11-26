@@ -1,5 +1,8 @@
 module FastTCPN
 
+  # Represents tokens in CPN.
+  # Stores values, ensures correct handling of
+  # equality and hash values.
   class Token
     alias orig_hash hash
     attr_reader :value, :hash, :token_id

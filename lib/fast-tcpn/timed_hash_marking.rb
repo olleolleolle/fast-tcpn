@@ -1,17 +1,24 @@
 module FastTCPN
 
+  # This class extends HashMarking to support timed tokens.
+  # It is however slower than not-timed version, so use it
+  # if you really need it.
   class TimedHashMarking < HashMarking
     InvalidTime = Class.new RuntimeError
 
     attr_reader :time, :next_time
 
+    # Create a new TimedHashMarking
     def initialize(*)
       super
       @time = 0
       @waiting = {}
+      # Next time when more tokens will be available from this marking
       @next_time = 0
     end
 
+    # Creates token with +object+ as its value and adds it to the marking.
+    # if no timestamp is given, current time will be used.
     def add(object, timestamp = @time)
       if object.instance_of? Hash
         timestamp = object[:ts]
@@ -26,6 +33,9 @@ module FastTCPN
       end
     end
 
+    # Set current time for the marking.
+    # This will cause moving tokens from waiting to active list.
+    # Putting clock back will cause error.
     def time=(time)
       if time < @time
         raise InvalidTime.new("You are trying to put back clock from #{@time} back to #{time}")

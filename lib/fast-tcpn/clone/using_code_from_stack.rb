@@ -32,6 +32,7 @@ end
 
 module FastTCPN
   module Clone
+  # :nodoc:
     def clone(token)
       token.deep_clone
     end

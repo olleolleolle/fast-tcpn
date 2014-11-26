@@ -10,6 +10,9 @@ module FastTCPN
     end
   end
 
+
+  # This is implementation of TCPN transition. 
+  # It has input and output places and it can be fired.
   class Transition
     InvalidToken = Class.new RuntimeError
 
@@ -17,6 +20,9 @@ module FastTCPN
 
     Event = Struct.new(:transition, :binding, :clock, :tcpn)
 
+    # Create new Transition.
+    # +name+ identifies this transition
+    # +net+ is reference to TCPN object, required to enable callback handling.
     def initialize(name, net = nil)
       @name = name
       @inputs = []
@@ -26,7 +32,7 @@ module FastTCPN
     end
 
     # Add input arc from the +place+.
-    # No inscruption currently possible,
+    # No inscription currently possible,
     # one token will be taken from the +place+
     # each time the transition is fired.
     def input(place)
@@ -34,23 +40,22 @@ module FastTCPN
       @inputs << place
     end
 
-    # Add output arc to the +place+, +block+ is the
-    # arcs inscription it will be given current binding
-    # and should return tokens that should be put in
-    # the +place+.
+    # Add output arc to the +place+.
+    # +block+ is the arc's expresstion, it will be called while firing
+    # transition. Value returned from the block will be put in output 
+    # place. The block gets +binding+, and +clock+ values. +binding+ is
+    # a hash with names of input places as keys nad tokens as values.
     def output(place, &block)
       raise "This is not a Place object!" unless place.kind_of? Place
       @outputs << OutputArc.new(place, block)
     end
 
     # Define sentry for this transition as a block.
-    # The sentry block will be given markings of
-    # all input places in the form of Hash:
-    # { place_name => Array_of_tokens, ... } and
-    # a result object.
-    # It should push (<<) to the return object
-    # subsequent valid bindings in the form of Hash with
-    # { place_name => token, another_place_name => another_token }
+    # The block gets three parameters: +marking_for+, +clock+ and +result+.
+    # +marking_for+ is a hash with input place names as keys and marking objects
+    # as values. Thus one can iterate over tokens from specified input places. 
+    # This block is supposed to push a hash of valid binding to the result like this:
+    #          result << { output_place_name1 => token, output_place_name2 => token2 }
     def sentry(&block)
       @sentry = block
     end
@@ -89,14 +94,17 @@ module FastTCPN
       true
     end
 
+    # Returns true if no custom sentry was defined for this transition.
     def default_sentry?
       @sentry.nil?
     end
 
+    # Number of input places
     def inputs_size
       @inputs.size
     end
 
+    # Number of output places
     def outputs_size
       @outputs.size
     end

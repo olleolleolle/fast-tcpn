@@ -1,8 +1,13 @@
 module FastTCPN
+
+  # This class represents TCPN model: places, transitions, arcs
   class TCPN
     PlaceTypeDoesNotMach = Class.new RuntimeError
 
+
     class Clock
+      # :nodoc:
+
       def initialize
         @value = 0
       end
@@ -30,16 +35,30 @@ module FastTCPN
       }
     end
 
+    # Create and return new not timed place for this model.
+    #
+    # If a place with this
+    # name exists somewhere in the model (e.g. on other pages), and object
+    # representing exisiting place will be returned. Keys of both keys will
+    # be merged. For description of keys see doc for HashMarking.
     def place(name, keys = {})
       create_or_find_place(name, keys, Place)
     end
 
+    # Create and return a new timed place for this model.
+    #
+    # If a place with this
+    # name exists somewhere in the model (e.g. on other pages), and object
+    # representing exisiting place will be returned. Keys of both keys will
+    # be merged. For description of keys see doc for HashMarking.
     def timed_place(name, keys = {})
       place = create_or_find_place(name, keys, TimedPlace)
       @timed_places[place] = true
       place
     end
 
+    # Create and return new transition for this model.
+    # +name+ identifies transition in the net.
     def transition(name)
       t = find_transition name
       if t.nil?
@@ -49,22 +68,27 @@ module FastTCPN
       t
     end
 
+    # Returns place with given name for this net.
     def find_place(name)
       @places[name]
     end
 
+    # Returns transition with given name for this net.
     def find_transition(name)
       @transitions.select { |t| t.name == name }.first
     end
 
+    # Number of places in this net.
     def places_count
       @places.size
     end
 
+    # Number of transitions in this net.
     def transitions_count
       @transitions.size
     end
 
+    # Starts simulation of this net.
     def sim
       begin
         fired = fire_transitions
@@ -72,10 +96,24 @@ module FastTCPN
       end while fired || advanced
     end
 
+    # Returns current value of global simulation clock for this net.
     def clock
       @clock.get
     end
 
+    # defines new callback for this net.
+    # +what+ can be +transition+ of +place+ for callbacks.
+    # Transition callbacks are fired when transitions are fired, place
+    # callbacks when place marking changes.
+    # +event+ for transition callback can be +before+ or +after+, for place,
+    # can be +:add+ or +:remove+. It defines when the callbacks fill be fired.
+    # If omitted, it will be called for both cases.
+    #
+    # Callback block for transition gets value of event tag (:before or :after)
+    # and FastTCPN::Transition::Event object.
+    #
+    # Callback block for place gets value of event tag (:add or :remove)
+    # and FastTCPN::Place::Event object.
     def cb_for(what, event = nil, &block)
       if what == :transition
         cb_for_transition event, &block
@@ -86,6 +124,8 @@ module FastTCPN
       end
     end
 
+    # :nodoc:
+    # Calls callbacks, for internal use.
     def call_callbacks(what, event, *params)
       @callbacks[what][event].each do |block|
         block.call event, *params
