@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'pry'
 
 describe FastTCPN::TCPN do
   shared_examples "place handler" do
@@ -109,6 +110,41 @@ describe FastTCPN::TCPN do
         expect(t.kind_of? FastTCPN::Transition).to be true
         expect(t.name).to eq :cpu_working
       end
+    end
+  end
+
+  describe "old API from tcpn gem" do
+    let :tcpn do
+      n = FastTCPN::TCPN.new
+      n.timed_place "cpus"
+      n
+    end
+
+    subject { tcpn }
+
+    describe "#add_marking_for" do
+      it "adds token for specified place" do
+        subject.add_marking_for 'cpus', 'cpu1'
+        expect(subject.find_place('cpus').marking.map {|t| t.value }).to eq ['cpu1']
+      end
+
+      it "adds timed token for specified place" do
+        subject.add_marking_for 'cpus', { val: 'cpu1', ts: 0 }
+        expect(subject.find_place('cpus').marking.map {|t| t.value }).to eq ['cpu1']
+        expect(subject.find_place('cpus').marking.map {|t| t.timestamp }).to eq [0]
+      end
+    end
+
+    describe "#marking_for" do
+      subject do
+        tcpn.find_place('cpus').add 'cpu1'
+        tcpn
+      end
+
+      it "returns correct token value for specified place" do
+        expect(subject.marking_for('cpus')).to eq [{ val: 'cpu1', ts: 0}]
+      end
+
     end
   end
 

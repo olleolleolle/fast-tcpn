@@ -133,6 +133,24 @@ module FastTCPN
     end
 
 
+    # OLD API, derived from tcpn gem
+
+    # Return marking for specified place in a form of Hash:
+    # { val: token_value, ts: token_timestamp }
+    def marking_for(name)
+      find_place(name).marking.map { |t| t.to_hash }
+    end
+
+    def add_marking_for(name, m)
+      token = m
+      timestamp = nil
+      if m.kind_of? Hash
+        token = m[:val]
+        timestamp = m[:ts]
+      end
+      find_place(name).add token, timestamp
+    end
+
     private
 
     def cb_for_transition(event, &block)

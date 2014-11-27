@@ -41,4 +41,10 @@ describe FastTCPN::TimedToken do
     end
   end
 
+  describe "#to_hash" do
+    it "returns valid reprsentation of token" do
+      expect(token_class.new(:asd, 200).to_hash).to eq({ val: :asd, ts: 200 })
+    end
+  end
+
 end

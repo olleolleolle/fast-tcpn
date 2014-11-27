@@ -19,5 +19,9 @@ module FastTCPN
       self.class.new(value, timestamp)
     end
 
+    def to_hash
+      { val: value, ts: timestamp }
+    end
+
   end
 end
