@@ -18,6 +18,8 @@ module FastTCPN
 
     attr_reader :name
 
+    # Class passed to callback fired when a transition is fired.
+    # Describes details of the event that caused the callback to be fired.
     Event = Struct.new(:transition, :binding, :clock, :tcpn)
 
     # Create new Transition.

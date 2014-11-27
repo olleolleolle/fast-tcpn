@@ -7,6 +7,8 @@ module FastTCPN
   # It supports neither time nor timed tokens!
   class Place
 
+    # Class passed to callback fired when tokens are added and/or removed from places.
+    # Describes details of the event that caused the callback to be fired.
     Event = Struct.new(:place, :tokens, :tcpn)
 
     attr_reader :name

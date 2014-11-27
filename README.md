@@ -29,9 +29,9 @@ places.
 Pages of TCPN have a name and their content is defined by block
 of code:
 
-    page "My first model" do
-      # put your model here
-    end
+     page "My first model" do
+       # put your model here
+     end
 
 Page names are used in error messages to facilitate location of
 problems.
@@ -60,7 +60,7 @@ their `name` and second using value returned by `valid?` method
 of token value, these two values can be used to index tokens in
 this place. This place would be created using e.g.
 
-    place :process, name: :name, valid: :valid?
+     place :process, name: :name, valid: :valid?
 
 The first value of pair is the name of the criterion (key),
 second is the method that will be called on token's value, to
@@ -90,9 +90,9 @@ must be a `place` object returned by `place` or `timed_place`
 statement. There are no input arc inscriptions. Read description
 of `sentry` to see how tokens from input places are used.
 
-    transition "work" do
-      input process
-    end
+     transition "work" do
+       input process
+     end
 
 #### Output places
 
@@ -113,26 +113,26 @@ returned it will be put it the place.
 If output place is timed, it is possible to set both: value nad
 timestamp of the output token. It can be done by returning hash:
 
-    { val: token_value, ts: token_timestamp }
+     { val: token_value, ts: token_timestamp }
 
 If input place is also timed and only timestamp of token should
 be changed when putting it in output place, this can be done
 using `with_timestamp` method:
 
-    binding[:cpu].with_timestamp + 100
+     binding[:cpu].with_timestamp + 100
 
 Complete definition of two places and transition with one input
 and one output place can be defined as follows:
 
-    process = place :process, { name: :name, valid: :valid? }
-    done = place :done
+     process = place :process, { name: :name, valid: :valid? }
+     done = place :done
 
-    transition "work" do
-      input process
-      output done do
-        binding[:process].name + "_done"
-      end
-    end
+     transition "work" do
+       input process
+       output done do
+         binding[:process].name + "_done"
+       end
+     end
 
 When fired it will get a process token from the place called
 `:process` and put in place called `:done` a token with value
@@ -173,7 +173,7 @@ block is supposed to push subsequent valid bindings to the
 of the form of Hash with input place names as keys and token
 as values:
 
-    result << { process: token1, cpu: cpu5 }
+     result << { process: token1, cpu: cpu5 }
 
 In current implementation of the tool, only the first passed
 value will be used and the block will not be subsequently
@@ -186,29 +186,29 @@ follows.
 
 
     page "Example model" do
-        p1 = place :process, { name: :name }
-        cpu = timed_place :cpu, { process: :process }
-        p2 = place :done
+       p1 = place :process, { name: :name }
+       cpu = timed_place :cpu, { process: :process }
+       p2 = place :done
 
-      transition 'run' do
-        input p1
-        input cpu
-        output p2 do |binding|
-          binding[:process].value.name.to_s + "_done"
-        end
-        output cpu do |binding, clock|
-          binding[:cpu].with_timestamp clock + 100
-        end
+       transition 'run' do
+         input p1
+         input cpu
+         output p2 do |binding|
+           binding[:process].value.name.to_s + "_done"
+         end
+         output cpu do |binding, clock|
+           binding[:cpu].with_timestamp clock + 100
+         end
 
-        sentry do |marking_for, clock, result|
-          marking_for[:process].each do |p|
-            marking_for[:cpu].each(:process, p.value.name) do |c|
-              result << { process: p, cpu: c }
-            end
-          end
-        end
-      end
-    end
+         sentry do |marking_for, clock, result|
+           marking_for[:process].each do |p|
+             marking_for[:cpu].each(:process, p.value.name) do |c|
+               result << { process: p, cpu: c }
+             end
+           end
+         end
+       end
+     end
 
 Place `:process` uses key `:name` as an index, it is not however
 used in this model. As cpus are matched to processes using value
@@ -216,7 +216,7 @@ returned by `cpu.process` method, the CPUs are indexed by this
 value. This allows in `sentry` iteration over cpu tokens that
 match process name selected before:
 
-            marking_for[:cpu].each(:process, p.value.name) do |c|
+      marking_for[:cpu].each(:process, p.value.name) do |c|
 
 In this case the first matching pair is returned as no additional
 conditions should be met.
@@ -240,10 +240,10 @@ definitions of subsequent pages.
 It is possible to load a subpages from separate files using
 `sub_page` statement:
 
-    page "Test model" do
-      sub_page 'network.rb'
-      sub_page 'cpus.rb'
-    end
+     page "Test model" do
+       sub_page 'network.rb'
+       sub_page 'cpus.rb'
+     end
 
 A subpage can also contain subpages loaded from another files.
 Paths used to locate files mentioned in subpages are interpreted
@@ -257,7 +257,7 @@ Using TCPN model
 The model described by the DSL can be saved in separate file and
 loaded using `TCPN.read` method:
 
-    tcpn = TCPN.read 'model/example.rb'
+     tcpn = TCPN.read 'model/example.rb'
 
 If the model contains subpages in separate files, they will be
 loaded from paths relative to the location of the `example.rb`
@@ -266,19 +266,70 @@ file.
 One can also embed the model directly in Ruby program and
 interpret using `TCPN.model method`
 
-    tcpn = TCPN.model do
-      page "Example model" do
-        # places and transitions here...
-      end
-    end
+     tcpn = TCPN.model do
+       page "Example model" do
+         # places and transitions here...
+       end
+     end
 
 Model objects returned by these methods can be used to start
 simulation and define callbacks.
 
+
+### Place Marking
+
+After the model is created, place marking can be set. It can be
+done using one of the following methods.
+
+* Find place by name and add tokens to it
+
+     tcpn.find_place(:process).add a_process_object
+
+* Add marking for specified place of the TCPN (old API, derived
+  from tcpn gem)
+
+     tcpn.add_marking_for(:process, a_process_object)
+
+To check marking, use one of the following methods:
+
+* Find place by name and iterate over its marking:
+
+     tcpn.find_place(:process).marking.each
+
+* Get marking of specified place of TCPN (old API, derived
+  from tcpn gem)
+
+     tcpn.marking_for(:process).each
+
+More details on methods of the model can be found in [API doc for
+TCPN class](link:FastTCPN/TCPN.html). More details on methods of
+the place objects can be found in [API doc for Place
+class](link:FastTCPN/Place.html).
+
 ### Simulation
 
-TODO
+Simulation of the model can be started using `sim` method.
+
+    tcpn.sim
+
+This method will return when simulation is finished.
 
 ### Callbacks
 
-TODO
+Convenient way to obtain results of simulation is provided by
+callbacks. They can be defined for transitions (before and after
+firing) and for places (when adding and when removing tokens).
+Callbacks are defined using `TCPN#cb_for` method. First parameter
+of the method defines if the callback concerns transitions or
+places. Second optional parameter defines when callback should be
+fired. For transition it can be either `:before` or `:after`. For
+place it can be `:add` or `:remove` if this parameter is omitted,
+callback will be fired in both cases.
+
+The block passes to `#cb_for` gets two parameters: first is value
+of the tag defining when callback is fired (`:before` or `:after`
+transition is fired, while `:add`ing or `:remove`ing tokens from
+places). Second parameter is event object holding details of the
+event. For transition callback it is Transition::Event object,
+for place callback it is Place::Event.
+
