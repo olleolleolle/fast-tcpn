@@ -1,3 +1,4 @@
+require 'fast-tcpn/version'
 require 'fast-tcpn/place'
 require 'fast-tcpn/timed_place'
 require 'fast-tcpn/transition'
