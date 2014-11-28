@@ -1,4 +1,5 @@
 require 'docile'
+require 'pry'
 
 module FastTCPN
   # Allows to create new TCPN model by interpreting passed block of code.
@@ -58,12 +59,19 @@ module FastTCPN
     # Represents and encapsulates all errors that will occur while
     # running DSL.
     class DSLError < RuntimeError
-      attr_reader :cause, :page
+      attr_reader :cause, :page, :files
 
-      def initialize(cause, page)
+      def initialize(cause, page, file = nil)
         super cause
-        set_backtrace cause.backtrace
         @cause, @page = cause, page
+        if @cause.respond_to? :full_backtrace
+          set_backtrace @cause.full_backtrace
+        else
+          set_backtrace @cause.backtrace
+        end
+        @files = []
+        @files += @cause.files if @cause.respond_to? :files
+        @files << file
       end
 
       def inspect
@@ -72,6 +80,15 @@ module FastTCPN
 
       def message
         "#{@cause.message} on TCPN page: `#{@page}`"
+      end
+
+      alias full_backtrace backtrace 
+
+      def backtrace
+        return full_backtrace if @files.empty?
+        full_backtrace.select do |b|
+          not @files.select { |f| b =~ /#{f}/ }.empty?
+        end
       end
     end
 
@@ -85,7 +102,7 @@ module FastTCPN
       def page(name, &block)
         Docile.dsl_eval(PageDSL.new(@tcpn, self, @file), &block)
       rescue StandardError => e
-        raise DSLError.new e, name
+        raise DSLError.new e, name, @file
       end
     end
 
