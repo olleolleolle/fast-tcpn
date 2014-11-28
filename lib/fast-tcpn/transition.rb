@@ -10,6 +10,29 @@ module FastTCPN
     end
   end
 
+  class TCPNBinding
+    TokenNotFound = Class.new RuntimeError
+
+    def initialize(mapping, marking_for)
+      @mapping, @marking_for = mapping, marking_for
+    end
+
+    def [](place_name)
+      token = @mapping[place_name]
+      if token.nil?
+        raise TokenNotFound("No mapping for place #{place_name}")
+      end
+      marking = @marking_for[place_name]
+      if marking.nil?
+        raise TokenNotFound("No marking for place #{place_name}")
+      end
+      new_token = marking.get token
+      if new_token.nil?
+        raise TokenNotFound.new("There was no #{token.inspect} in #{marking.inspect}!")
+      end
+      new_token
+    end
+  end
 
   # This is implementation of TCPN transition. 
   # It has input and output places and it can be fired.
@@ -68,15 +91,21 @@ module FastTCPN
 
       # Marking is shuffled each time before it is
       # used so here we can take first found binding
-      binding = Enumerator.new do |y|
+      mapping = Enumerator.new do |y|
                   get_sentry.call(input_markings, clock, y)
                 end.first
 
-      return false if binding.nil?
+      return false if mapping.nil?
 
-      call_callbacks :before, Event.new(@name, binding, clock, @net)
+      tcpn_binding = TCPNBinding.new mapping, input_markings
 
-      binding.each do |place_name, token|
+      call_callbacks :before, Event.new(@name, tcpn_binding, clock, @net)
+
+      tokens_for_outputs = @outputs.map do |o|
+        o.block.call(tcpn_binding, clock)
+      end
+
+      mapping.each do |place_name, token|
         unless token.kind_of? Token
           raise InvalidToken.new("#{token.inspect} put by sentry for transition `#{name}` in binding for `#{place_name}`")
         end
@@ -87,11 +116,11 @@ module FastTCPN
       end
 
       @outputs.each do |o|
-        token = o.block.call(binding, clock)
+        token = tokens_for_outputs.shift
         o.place.add token unless token.nil?
       end
 
-      call_callbacks :after, Event.new(@name, binding, clock, @net)
+      call_callbacks :after, Event.new(@name, mapping, clock, @net)
 
       true
     end
