@@ -140,6 +140,15 @@ describe FastTCPN::Transition do
       end
     end
 
+    describe "#output" do
+      it "requires Place object as first parameter" do
+        expect { transition.output(:asd) {} }.to raise_error
+      end
+      it "requires block" do
+        expect { transition.output in1 }.to raise_error
+      end
+    end
+
     describe "#inputs_size" do
       it "counts input arcs" do
         expect{
@@ -151,7 +160,7 @@ describe FastTCPN::Transition do
     describe "#outputs_size" do
       it "counts output arcs" do
         expect{
-          transition.output out {}
+          transition.output(out) {}
         }.to change(transition, :outputs_size).from(0).to(1)
       end
     end

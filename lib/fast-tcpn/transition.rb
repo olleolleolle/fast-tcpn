@@ -72,6 +72,7 @@ module FastTCPN
     # a hash with names of input places as keys nad tokens as values.
     def output(place, &block)
       raise "This is not a Place object!" unless place.kind_of? Place
+      raise "Tried to define output arc without expression! Block is required!" unless block_given?
       @outputs << OutputArc.new(place, block)
     end
 
