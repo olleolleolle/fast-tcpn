@@ -19,6 +19,10 @@ module FastTCPN
       false
     end
 
+    def to_hash
+      { val: value }
+    end
+
     alias == eql?
 
   end
