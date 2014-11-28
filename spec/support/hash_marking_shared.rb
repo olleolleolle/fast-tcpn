@@ -1,14 +1,37 @@
 class Worker
   attr_reader :name
-  def initialize(name, finished)
-    @name, @finished = name, finished
+  def initialize(name, finished, cpu = nil)
+    @name, @finished, @cpu = name, finished, cpu
   end
   def finished?
     @finished
   end
+
+  def cpu(value)
+    if @cpu == value
+      "yes"
+    else
+      "no"
+    end
+  end
 end
 
 shared_examples 'hash marking' do
+
+  describe "keys with params" do
+    let :marking do
+      marking_class.new name: :name, finished: :finished?, cpu_intel: [ :cpu, "intel" ]
+    end
+
+    subject { marking }
+
+    it "iterates over selected tokens" do
+      subject.add Worker.new("intel1", true, 'intel')
+      subject.add Worker.new("intel2", true, 'intel')
+      subject.add Worker.new("amd", true, 'amd')
+      expect(subject.each(:cpu_intel, 'yes').map { |t| t.value.name }).to match_array ["intel1", "intel2"]
+    end
+  end
 
   let :marking do
     marking_class.new name: :name, finished: :finished?
@@ -71,9 +94,6 @@ shared_examples 'hash marking' do
       expect(subject.map { |t| t.value.name }).to match_array [wget1.name, wget2.name, wget3.name]
     end
 
-    # FIXME: to small number of tokens in this test
-    # this may fail once for some time, when two
-    # shuffles return the same order of tokens...
     it "shuffles tokens for each iteration" do
       list1 = subject.map { |t| t.value.name }
       equal_lists = 0

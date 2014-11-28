@@ -69,6 +69,11 @@ defined place will be be easily accessible using key `:name` and
 values returned by their method `name` and using key `:valid` and
 values returned by their method `:valid?`.
 
+If the method called on token value needs parameter, then the value of
+in the hash may be an array: [ :method_name, method, parameters ], e.g.:
+
+     place :process, name: :name, valid: :valid?, owner: [ :get_owner, "Jack" ]
+
 If a place exists on different pages with different keys, the
 keys from different place definitions will be merged.
 This method of token indexing is used in both: timed and not

@@ -28,6 +28,7 @@ module FastTCPN
 
 
     InvalidToken = Class.new RuntimeError
+    InvalidKey = Class.new RuntimeError
     CannotAddKeys = Class.new RuntimeError
     NoTokensFound = Class.new RuntimeError
 
@@ -118,11 +119,17 @@ module FastTCPN
     end
 
     def each_key_with(token)
-      @keys.each do |name, method|
-        unless token.value.respond_to? method
-          raise InvalidToken.new("#{token.inspect} does not respond to #{method}")
+      @keys.each do |name, method_with_params|
+        params = nil
+        method = method_with_params
+        if method_with_params.instance_of? Array
+          method = method_with_params.first
+          params = method_with_params[1..-1]
         end
-        value = token.value.send(method)
+        unless token.value.respond_to? method
+          raise InvalidToken.new("#{token.inspect} does not respond to #{method.inspect}")
+        end
+        value = token.value.send(method, *params)
         yield name, value
       end
     end
