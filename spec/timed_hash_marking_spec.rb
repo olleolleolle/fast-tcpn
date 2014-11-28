@@ -89,5 +89,23 @@ describe FastTCPN::TimedHashMarking do
         marking.add Worker.new(:asd, true), time
       }.to change(marking, :size).by(1)
     end
+
+    describe "with Hash" do
+      let(:value) { Worker.new("new intel123", true, 'intel') }
+      subject do
+        marking = marking_class.new name: :name, finished: :finished?
+        marking.add val: value, ts: 100
+        marking.time = 100
+        marking
+      end
+
+      it "adds token with value from :val key" do
+        expect(subject.each.first.value.name).to eq value.name
+      end
+
+      it "adds token with timestamp from :ts key" do
+        expect(subject.each.first.timestamp).to eq 100
+      end
+    end
   end
 end

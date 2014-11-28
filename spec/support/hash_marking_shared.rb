@@ -174,6 +174,14 @@ shared_examples 'hash marking' do
     end
   end
 
+  describe "#add with Hash" do
+    it "adds token with value from :val key" do
+      value = Worker.new("intel1", true, 'intel')
+      subject.add val: value
+      expect(subject.each.first.value.name).to eq value.name
+    end
+  end
+
   it "works for Symbols" do
     expect {
       marking_class.new.add :asd

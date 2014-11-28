@@ -1,3 +1,17 @@
+module FastTCPN
+  DontCloneClasses = [ Fixnum, Symbol, TrueClass, FalseClass, NilClass ]
+  module Clone
+  # :nodoc:
+    def clone(token)
+      if DontCloneClasses.include? token.class
+        token
+      else
+        token.clone.deep_clone
+      end
+    end
+  end
+end
+
 # http://stackoverflow.com/questions/8206523/how-to-create-a-deep-copy-of-an-object-in-ruby
 class Object
   def deep_clone
@@ -21,7 +35,7 @@ class Object
   end
 end
 
-[ Fixnum, Symbol, TrueClass, FalseClass, NilClass ].each do |klazz|
+FastTCPN::DontCloneClasses.each do |klazz|
   klazz.class_eval do
     def deep_clone
       self
@@ -30,11 +44,3 @@ end
 end
 
 
-module FastTCPN
-  module Clone
-  # :nodoc:
-    def clone(token)
-      token.deep_clone
-    end
-  end
-end

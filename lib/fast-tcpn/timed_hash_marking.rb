@@ -21,7 +21,7 @@ module FastTCPN
     # if no timestamp is given, current time will be used.
     def add(object, timestamp = @time)
       if object.instance_of? Hash
-        timestamp = object[:ts]
+        timestamp = object[:ts] || 0
         object = object[:val]
       end
       token = prepare_token(object, timestamp)
