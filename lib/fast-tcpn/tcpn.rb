@@ -142,13 +142,14 @@ module FastTCPN
     end
 
     def add_marking_for(name, m)
-      token = m
-      timestamp = nil
       if m.kind_of? Hash
         token = m[:val]
         timestamp = m[:ts]
+        find_place(name).add token, timestamp
+      else
+        token = m
+        find_place(name).add token
       end
-      find_place(name).add token, timestamp
     end
 
     private
