@@ -31,6 +31,16 @@ shared_examples 'hash marking' do
       subject.add Worker.new("amd", true, 'amd')
       expect(subject.each(:cpu_intel, 'yes').map { |t| t.value.name }).to match_array ["intel1", "intel2"]
     end
+
+    it "works for empty marking" do
+      expect { 
+        subject.each(:cpu_intel, 'yes') do
+
+        end
+      }.not_to raise_error
+    end
+
+
   end
 
   let :marking do

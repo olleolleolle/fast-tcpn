@@ -63,6 +63,7 @@ module FastTCPN
     # case one should consider using standard +shuffle+ method here instead of +lazy_shuffle+.
     def each(key = nil, value = nil)
       return enum_for(:each, key, value) unless block_given?
+      return if empty?
       list_for(key, value).lazy_shuffle do |token|
         yield clone token
       end
