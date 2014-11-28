@@ -108,6 +108,17 @@ module FastTCPN
       @global_list.size
     end
 
+    # :nodoc:
+    # Return fresh, unaltered clone of given token
+    # The given token's value could have been changed when it was
+    # passed to a user-defined code. Use this method to refresh this value.
+    # Will work as long as user interfered with token value, but not with
+    # the token object iself.
+    #
+    # For internal use, while firing transition
+    def get(token)
+      clone @global_list[token]
+    end
 
     private
 
@@ -143,7 +154,7 @@ module FastTCPN
     end
 
     def add_token(token)
-      @global_list[token] = true
+      @global_list[token] = token
       each_key_with(token) do |key_name, value|
         @lists[key_name] ||= {}
         @lists[key_name][value] ||= []

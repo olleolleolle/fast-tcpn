@@ -1,5 +1,5 @@
 class Worker
-  attr_reader :name
+  attr_accessor :name
   def initialize(name, finished, cpu = nil)
     @name, @finished, @cpu = name, finished, cpu
   end
@@ -151,6 +151,27 @@ shared_examples 'hash marking' do
       end
     end
 
+    describe "#get gets token from marking" do
+      let(:token) { subject.each.first }
+
+      it "equal to given token" do
+        expect(subject.get(token)).to eq token
+      end
+
+      it "clone of given token" do
+        expect(subject.get(token).object_id).not_to eq token.object_id
+      end
+
+      it "even if token value changed" do
+        token.value.name = "asdasd"
+        expect(subject.get(token)).to eq token
+      end
+
+      it "every time a new clone" do
+        token2 = subject.get(token)
+        expect(subject.get(token).object_id).not_to eq token2.object_id
+      end
+    end
   end
 
   it "works for Symbols" do
