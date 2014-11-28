@@ -53,18 +53,20 @@ module FastTCPN
       @time
     end
 
+    def token_type
+      TimedToken
+    end
+
     private
 
     def prepare_token(object, timestamp = 0)
       if object.instance_of? token_type
         clone object
+      elsif object.kind_of? token_type
+        token_type.new clone(object.value), object.timestamp
       else
         token_type.new clone(object), timestamp
       end
-    end
-
-    def token_type
-      TimedToken
     end
 
     def add_to_waiting(token)

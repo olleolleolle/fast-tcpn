@@ -184,11 +184,21 @@ shared_examples 'hash marking' do
     end
   end
 
-  describe "#add with Hash" do
-    it "adds token with value from :val key" do
+  describe "#add" do
+    it "extracts value from tokens of class extending this class" do
       value = Worker.new("intel1", true, 'intel')
-      subject.add val: value
+      extended_token_class = Class.new subject.token_type
+      token = extended_token_class.new(value)
+      subject.add token
       expect(subject.each.first.value.name).to eq value.name
+    end
+
+    describe "with Hash" do
+      it "adds token with value from :val key" do
+        value = Worker.new("intel1", true, 'intel')
+        subject.add val: value
+        expect(subject.each.first.value.name).to eq value.name
+      end
     end
   end
 

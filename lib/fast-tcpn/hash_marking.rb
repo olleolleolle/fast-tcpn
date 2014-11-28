@@ -124,6 +124,11 @@ module FastTCPN
       clone @global_list[token]
     end
 
+    # reimplement if inherited classes need different one
+    def token_type
+      Token
+    end
+
     private
 
     def tokens_by_key(key_name, value)
@@ -152,6 +157,8 @@ module FastTCPN
     def prepare_token(object)
       if object.instance_of? token_type
         clone object
+      elsif object.kind_of? token_type
+        token_type.new clone(object.value)
       else
         token_type.new clone(object)
       end
@@ -164,11 +171,6 @@ module FastTCPN
         @lists[key_name][value] ||= []
         @lists[key_name][value] << token
       end
-    end
-
-    # reimplement if inherited classes need different one
-    def token_type
-      Token
     end
 
     def validate_token!(token)
