@@ -20,15 +20,15 @@ module FastTCPN
     def [](place_name)
       token = @mapping[place_name]
       if token.nil?
-        raise TokenNotFound("No mapping for place #{place_name}")
+        raise TokenNotFound.new("No mapping for place `#{place_name}`")
       end
       marking = @marking_for[place_name]
       if marking.nil?
-        raise TokenNotFound("No marking for place #{place_name}")
+        raise TokenNotFound.new("No marking for place `#{place_name}`")
       end
       new_token = marking.get token
       if new_token.nil?
-        raise TokenNotFound.new("There was no #{token.inspect} in #{marking.inspect}!")
+        raise TokenNotFound.new("There was no `#{token.inspect}` in `#{marking.inspect}`!")
       end
       new_token
     end
@@ -169,9 +169,13 @@ module FastTCPN
 
     def default_sentry
       proc do |marking_for, clock, result|
-        result << marking_for.map do |place, marking|
-          { place => marking.first } unless marking.first.nil?
-        end.reduce(:merge)
+        mapping = marking_for.map do |place, marking|
+          break nil if marking.first.nil?
+          { place => marking.first }
+        end
+        unless mapping.nil?
+          result << mapping.compact.reduce(:merge)
+        end
       end
     end
   end

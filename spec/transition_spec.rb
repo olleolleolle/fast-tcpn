@@ -126,6 +126,17 @@ describe FastTCPN::Transition do
         expect(in2.marking).not_to be_empty
         expect(out.marking).not_to be_empty
       end
+
+      it "prevents firing transition if one of many input places is not marked" do
+        transition = FastTCPN::Transition.new "disabled"
+        transition.input in1
+        transition.input empty
+        transition.output out do |binding|
+          binding[empty.name]
+        end
+        expect(transition.fire).to be false
+
+      end
     end
 
     describe "#default_sentry?" do
