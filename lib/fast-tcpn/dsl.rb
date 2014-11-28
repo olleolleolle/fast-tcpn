@@ -103,6 +103,8 @@ module FastTCPN
         Docile.dsl_eval(PageDSL.new(@tcpn, self, @file), &block)
       rescue StandardError => e
         raise DSLError.new e, name, @file
+      rescue SyntaxError => e
+        raise DSLError.new e, name, @file
       end
     end
 
