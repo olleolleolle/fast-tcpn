@@ -30,7 +30,6 @@ module FastTCPN
     InvalidToken = Class.new RuntimeError
     InvalidKey = Class.new RuntimeError
     CannotAddKeys = Class.new RuntimeError
-    NoTokensFound = Class.new RuntimeError
 
     include Enumerable
 
@@ -194,7 +193,7 @@ module FastTCPN
         @global_list.keys
       end
       if list.nil?
-        raise NoTokensFound.new("For key `#{key.inspect}` and value: `#{value}`")
+        list = []
       end
       list
     end
