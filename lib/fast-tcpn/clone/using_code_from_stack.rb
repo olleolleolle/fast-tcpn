@@ -22,8 +22,9 @@ class Object
       begin
         @deep_cloning = true
         val = val.deep_clone
-      rescue TypeError
-        next
+      # silent rescue is never a good idea...
+      #rescue TypeError
+      #  next
       ensure
         @deep_cloning = false
       end
