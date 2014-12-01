@@ -6,6 +6,8 @@ module FastTCPN
     PlaceTypeDoesNotMach = Class.new RuntimeError
     InvalidCallback = Class.new RuntimeError
 
+    ClockEvent = Struct.new(:clock, :previous_clock, :tcpn)
+
     class Clock
       # :nodoc:
 
@@ -32,7 +34,8 @@ module FastTCPN
       @clock = Clock.new
       @callbacks = {
         transition: { before: [], after: [] },
-        place: { add: [], remove: [] }
+        place: { add: [], remove: [] },
+        clock: { before: [], after: [] }
       }
     end
 
@@ -120,6 +123,8 @@ module FastTCPN
         cb_for_transition event, &block
       elsif what == :place
         cb_for_place event, &block
+      elsif what == :clock
+        cb_for_clock event, &block
       else
         raise InvalidCallback.new "Don't know how to add callback for #{what}"
       end
@@ -167,6 +172,15 @@ module FastTCPN
       end
     end
 
+    def cb_for_clock(event, &block)
+      if event == :before || event.nil?
+        @callbacks[:clock][:before] << block
+      end
+      if event == :after || event.nil?
+        @callbacks[:clock][:after] << block
+      end
+    end
+
     def create_or_find_place(name, keys, type)
       place = @places[name]
       if place.nil?
@@ -181,10 +195,13 @@ module FastTCPN
     end
 
     def move_clock_to(val)
+      previous_clock = @clock.get
+      call_callbacks(:clock, :before, ClockEvent.new(@clock.get, nil, @tcpn))
       return false unless @clock.set val
       @timed_places.each_key do |place|
         place.time = val
       end
+      call_callbacks(:clock, :after, ClockEvent.new(@clock.get, previous_clock, @tcpn))
       true
     end
 

@@ -73,5 +73,44 @@ describe FastTCPN::TCPN do
         expect(called).to eq 1
       end
     end
+
+    describe "for clock" do
+
+      let :tcpn do
+        m = FastTCPN::TCPN.new
+        p1 = m.timed_place 'input'
+        p2 = m.place 'output'
+        t = m.transition 'send'
+        t.input p1
+        t.output p2 do |binding, clock|
+          binding['input']
+        end
+        p1.add :data_package, 100
+        m
+      end
+
+      it "is called before clock is changed" do
+        called = 0
+        tcpn.cb_for :clock, :before do |tag, event|
+          expect(tag).to eq :before
+          expect(event.clock).to eq(0) if called == 0
+          called += 1
+        end
+        tcpn.sim
+        expect(called).to be > 1
+      end
+
+      it "is called after clock is changed" do
+        called = 0
+        tcpn.cb_for :clock, :after do |tag, event|
+          expect(tag).to eq :after
+          expect(event.clock).to eq 100
+          expect(event.previous_clock).to eq 0
+          called += 1
+        end
+        tcpn.sim
+        expect(called).to eq 1
+      end
+    end
   end
 end
