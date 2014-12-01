@@ -1,13 +1,9 @@
 module FastTCPN
-  DontCloneClasses = [ Fixnum, Symbol, TrueClass, FalseClass, NilClass ]
+  DontCloneClasses = [ Numeric, Symbol, TrueClass, FalseClass, NilClass ]
   module Clone
   # :nodoc:
     def clone(token)
-      if DontCloneClasses.include? token.class
-        token
-      else
-        token.clone.deep_clone
-      end
+      token.deep_clone
     end
   end
 end
@@ -26,12 +22,18 @@ class Object
       #rescue TypeError
       #  next
       ensure
-        @deep_cloning = false
+        # better not to litter original object with
+        # temporary instance variables
+        #@deep_cloning = false
+        remove_instance_variable :@deep_cloning
       end
       @deep_cloning_obj.instance_variable_set(var, val)
     end
     deep_cloning_obj = @deep_cloning_obj
     @deep_cloning_obj = nil
+    # better not to litter original object with
+    # temporary instance variables
+    remove_instance_variable :@deep_cloning_obj
     deep_cloning_obj
   end
 end
