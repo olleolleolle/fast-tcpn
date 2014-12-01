@@ -100,6 +100,8 @@ module FastTCPN
       end while fired || advanced
     end
 
+    alias run sim
+
     # Returns current value of global simulation clock for this net.
     def clock
       @clock.get
