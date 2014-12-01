@@ -4,6 +4,7 @@ module FastTCPN
   class TCPN
 
     PlaceTypeDoesNotMach = Class.new RuntimeError
+    InvalidCallback = Class.new RuntimeError
 
     class Clock
       # :nodoc:
