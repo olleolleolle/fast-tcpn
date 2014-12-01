@@ -9,7 +9,7 @@ module FastTCPN
 
     # Class passed to callback fired when tokens are added and/or removed from places.
     # Describes details of the event that caused the callback to be fired.
-    Event = Struct.new(:place, :tokens, :tcpn)
+    Event = Struct.new(:place, :tokens, :clock, :tcpn)
 
     attr_reader :name
 
@@ -33,14 +33,14 @@ module FastTCPN
     # Removes +token+ from this place
     # Callbacks defined for places will be fired
     def delete(token)
-      @net.call_callbacks(:place, :remove, Event.new(@name, [token], @net)) unless @net.nil?
+      @net.call_callbacks(:place, :remove, Event.new(@name, [token], @clock, @net)) unless @net.nil?
       @marking.delete token
     end
 
     # Add +token+ to this place
     # Callbacks defined for places will be fired
     def add(token)
-      @net.call_callbacks(:place, :add, Event.new(@name, [token], @net)) unless @net.nil?
+      @net.call_callbacks(:place, :add, Event.new(@name, [token], @clock, @net)) unless @net.nil?
       @marking.add token
     end
 

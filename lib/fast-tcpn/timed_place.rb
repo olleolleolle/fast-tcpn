@@ -12,6 +12,7 @@ module FastTCPN
     def initialize(name, keys = {}, net = nil)
       super
       @marking = TimedHashMarking.new keys
+      @clock = 0
     end
 
     # returns next timestamp that will cause more tokens
@@ -24,6 +25,7 @@ module FastTCPN
     # (will move tokens from waiting to active state).
     # Putting clock back will cause error.
     def time=(val)
+      @clock = val
       @marking.time = val
     end
 

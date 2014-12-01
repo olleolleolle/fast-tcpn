@@ -55,6 +55,7 @@ describe FastTCPN::TCPN do
         tcpn.cb_for :place, :remove do |tag, event|
           expect(tag).to eq :remove
           expect(event.place).to eq 'input'
+          expect(event.clock).to eq 100
           expect(event.tokens.first.value).to eq :data_package
           called += 1
         end
@@ -67,6 +68,7 @@ describe FastTCPN::TCPN do
         tcpn.cb_for :place, :add do |tag, event|
           expect(tag).to eq :add
           expect(event.place).to eq 'output'
+          expect(event.clock).to eq nil # this place is not timed!
           called += 1
         end
         tcpn.sim
