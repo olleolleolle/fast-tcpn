@@ -19,17 +19,22 @@ module FastTCPN
 
     # Creates token with +object+ as its value and adds it to the marking.
     # if no timestamp is given, current time will be used.
-    def add(object, timestamp = @time)
-      if object.instance_of? Hash
-        timestamp = object[:ts] || 0
-        object = object[:val]
+    def add(objects, timestamp = @time)
+      unless objects.kind_of? Array
+        objects = [ objects ]
       end
-      token = prepare_token(object, timestamp)
-      timestamp = token.timestamp
-      if timestamp > @time
-        add_to_waiting token
-      else
-        add_token token
+      objects.each do |object|
+        if object.instance_of? Hash
+          timestamp = object[:ts] || 0
+          object = object[:val]
+        end
+        token = prepare_token(object, timestamp)
+        timestamp = token.timestamp
+        if timestamp > @time
+          add_to_waiting token
+        else
+          add_token token
+        end
       end
     end
 

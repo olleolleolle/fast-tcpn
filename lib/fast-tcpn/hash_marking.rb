@@ -89,12 +89,17 @@ module FastTCPN
     # without fear to interfere with TCPN simulation. But have it in mind!
     # If you put a large object with a lot of references in the marking,
     # it will significanntly slow down simulation and increase memory usage.
-    def add(object)
-      value = object
-      if object.instance_of? Hash
-        value = object[:val]
+    def add(objects)
+      unless objects.kind_of? Array
+        objects = [ objects ]
       end
-      add_token prepare_token(value)
+      objects.each do |object|
+        value = object
+        if object.instance_of? Hash
+          value = object[:val]
+        end
+        add_token prepare_token(value)
+      end
     end
 
     alias << add

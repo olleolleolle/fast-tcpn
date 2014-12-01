@@ -106,6 +106,27 @@ describe FastTCPN::TimedHashMarking do
       it "adds token with timestamp from :ts key" do
         expect(subject.each.first.timestamp).to eq 100
       end
+
+    end
+
+    describe "with Hash in Array" do
+      let(:value1) { Worker.new("new intel123", true, 'intel') }
+      let(:value2) { Worker.new("new intel223", true, 'intel') }
+
+      subject do
+        marking = marking_class.new name: :name, finished: :finished?
+        marking.add [{ val: value1, ts: 100}, { val: value2, ts: 100}]
+        marking.time = 100
+        marking
+      end
+
+      it "adds all tokens from Array" do
+        expect(subject.map { |t| t.value.name }).to match_array [value1.name, value2.name]
+      end
+
+      it "added tokens have correct timestamp" do
+        expect(subject.map { |t| t.timestamp }).to match_array [100, 100]
+      end
     end
   end
 end

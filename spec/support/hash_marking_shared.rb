@@ -200,6 +200,23 @@ shared_examples 'hash marking' do
         expect(subject.each.first.value.name).to eq value.name
       end
     end
+
+    describe "with Array" do
+      it "adds all tokens from array" do
+        value1 = Worker.new("intel1", true, 'intel')
+        value2 = Worker.new("intel2", true, 'intel')
+        subject.add [ value1, value2 ]
+        expect(subject.map { |t| t.value.name }).to match_array ['intel1', 'intel2']
+      end
+      describe "of Hashes" do
+        it "adds all tokens from all Hashes in array" do
+        value1 = Worker.new("intel1", true, 'intel')
+        value2 = Worker.new("intel2", true, 'intel')
+        subject.add [ {val: value1}, {val: value2} ]
+        expect(subject.map { |t| t.value.name }).to match_array ['intel1', 'intel2']
+        end
+      end
+    end
   end
 
   it "works for Symbols" do
