@@ -50,6 +50,8 @@ module FastTCPN
     InvalidToken = Class.new RuntimeError
 
     class FiringError < RuntimeError
+      attr_reader :cause, :transition
+
       def initialize(transition, cause)
         @transition, @cause = transition, cause
         set_backtrace @cause.backtrace
