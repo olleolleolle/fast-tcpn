@@ -338,3 +338,38 @@ places). Second parameter is event object holding details of the
 event. For transition callback it is Transition::Event object,
 for place callback it is Place::Event.
 
+## Known Errors and Pitfalls
+
+### Cloning problems
+
+Due to nature of TCPN based on functional paradigm TCPN tokens
+are immutable. To achieve this in Ruby (and other imperative
+languages cloning token values is crucial for correct behavior of
+TCPN simulation.
+
+Unfortunately, some Ruby objects cannot be cloned. One example is
+Enumerator that was already started (#next was called at least
+once). If you put such value in a token, simulation will fail, as
+the token will not be cloned. Use your own implementation of
+enumeration instead. Please report any other built-in classes
+that cause simulation problems.
+
+
+### TODO
+
+* Update README
+* Possible optimization can be achieved by implementing
+  clone-on-write instead of eager cloning every time when a token
+  is passed to user-provided code. We can use
+  https://github.com/dkubb/ice_nine to deeple freeze token
+  objects, catch exception indicating that a modification was
+  tried, clone object and redo the modification on the clone. In
+  short. It is not easy and there is no guarantee that overhead
+  of the solution won't level gains resulting from lazy cloning.
+* Add traditional guard to enable quick prototyping. This however
+  requires a king of input arc inscriptions, as currently this is
+  implemented in sentry and will not have its place in the
+  traditional guard. Maybe we could allow traditional guards only
+  for transitions that remove single tokens? They will not be
+  recommended way of implementing this anyway.
+
