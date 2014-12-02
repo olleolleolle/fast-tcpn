@@ -1,5 +1,8 @@
 require 'simplecov'
-SimpleCov.start
+SimpleCov.start do
+  add_filter '/spec/'
+end
+
 
 require 'fast-tcpn'
 Dir["./spec/support/**/*.rb"].sort.each { |f| require f }
