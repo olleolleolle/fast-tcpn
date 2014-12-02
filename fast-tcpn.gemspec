@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
 
   # Running rspec tests from rake
   s.add_development_dependency 'rspec', '~> 3.1'
+  s.add_development_dependency 'simplecov'
 
   s.extra_rdoc_files << 'README.md'
   s.rdoc_options << '--main' << 'README.md'
