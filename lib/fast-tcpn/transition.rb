@@ -49,6 +49,17 @@ module FastTCPN
   class Transition
     InvalidToken = Class.new RuntimeError
 
+    class FiringError < RuntimeError
+      def initialize(transition, cause)
+        @transition, @cause = transition, cause
+        set_backtrace @cause.backtrace
+      end
+
+      def inspect
+        "<#{self.class} #{@cause.inspect} in transition `#{@transition.name}`>"
+      end
+    end
+
     attr_reader :name
 
     # Class passed to callback fired when a transition is fired.
@@ -143,6 +154,10 @@ module FastTCPN
       call_callbacks :after, Event.new(@name, mapping, clock, @net)
 
       true
+    rescue InvalidToken
+      raise
+    rescue RuntimeError => e
+      raise FiringError.new(self, e)
     end
 
     # Returns true if no custom sentry was defined for this transition.
