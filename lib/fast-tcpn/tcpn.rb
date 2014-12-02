@@ -6,6 +6,29 @@ module FastTCPN
     PlaceTypeDoesNotMach = Class.new RuntimeError
     InvalidCallback = Class.new RuntimeError
 
+    class SimulationError < RuntimeError
+      def initialize(cause)
+        @cause = cause
+        set_backtrace @cause.backtrace
+        set_dir
+      end
+
+      alias full_backtrace backtrace
+
+      def backtrace
+        return full_backtrace if @dir.nil?
+        return full_backtrace if FastTCPN.debug
+        full_backtrace.select { |b| b !~ /#{@dir}/ }
+      end
+
+      private
+      def set_dir
+        @dir = __FILE__
+        @dir = File.dirname(@dir) while(File.basename(@dir) != 'lib' && !@dir.empty? && @dir != '/')
+        @dir = nil if @dir.empty? || @dir == '/'
+      end
+    end
+
     ClockEvent = Struct.new(:clock, :previous_clock, :tcpn)
 
     class Clock
@@ -98,6 +121,8 @@ module FastTCPN
         fired = fire_transitions
         advanced = move_clock_to find_next_time
       end while fired || advanced
+    rescue StandardError => e
+      raise SimulationError.new(e)
     end
 
     alias run sim

@@ -9,3 +9,17 @@ require 'fast-tcpn/token'
 require 'fast-tcpn/timed_token'
 require 'fast-tcpn/tcpn'
 require 'fast-tcpn/dsl'
+
+module FastTCPN
+  @@debug = false
+
+  # Check debugging of FastTCPN -- full backtraces from simulator
+  def self.debug
+    @@debug
+  end
+
+  # Turn on/off debugging of FastTCPN -- full backtraces from simulator
+  def self.debug=(d)
+    @@debug = d
+  end
+end

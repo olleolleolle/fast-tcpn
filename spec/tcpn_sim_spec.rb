@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'pry'
 
 describe FastTCPN::TCPN do
   describe "#sim" do
@@ -136,6 +137,107 @@ describe FastTCPN::TCPN do
 
     end
 
-  end
 
+    describe "error handling" do
+      let(:process) { tcpn.timed_place :process, name: :name }
+      let(:cpu) { tcpn.timed_place :cpu, name: :name, process: :process }
+      let(:out) { tcpn.timed_place :out }
+
+      let(:tcpn) do 
+        FastTCPN::TCPN.new
+      end
+
+      before do
+        t1 = tcpn.transition :work
+        t1.sentry &sentry
+        t1.input process
+        t1.input cpu
+        t1.output out, &out_output
+        t1.output cpu, &cpu_output
+
+        process.add AppProcess.new('process1')
+        cpu.add CPU.new("CPU1_process1", 'process1')
+      end
+
+      let(:sentry) do
+        proc do |marking_for, clock, result|
+          marking_for[:process].each do |p|
+            marking_for[:cpu].each(:process, p.value.name) do |c|
+              result << { process: p, cpu: c }
+            end
+          end
+        end
+      end
+
+      let(:out_output) do
+        proc do |binding, clock|
+          { val: binding[:process].value.name + "_done", ts: clock + 10 }
+        end
+      end
+
+      let(:cpu_output) do
+        proc do |binding, clock|
+          binding[:cpu].with_timestamp clock + 100
+        end
+      end
+
+      shared_examples 'error handler' do
+        it "raises TCPN::SimulationError" do
+          expect { tcpn.sim }.to raise_error FastTCPN::TCPN::SimulationError
+        end
+
+        context "when FastTCPN.debug is false" do
+          it "does not put FastTCPN files in backtrace" do
+            FastTCPN.debug = false
+            error_raised = false
+            begin
+              tcpn.sim
+            rescue FastTCPN::TCPN::SimulationError => e
+              error_raised = true
+              expect(e.backtrace.map { |b| b.sub /:.*$/,'' }.select{ |b| b =~ /\/lib\/fast-tcpn\// }).to be_empty
+              expect(e.backtrace).not_to be_empty
+            end
+            expect(error_raised).to be true
+          end
+        end
+
+        context "when FastTCPN.debug is true" do
+          it "puts FastTCPN files in backtrace" do
+            FastTCPN.debug = true
+            error_raised = false
+            begin
+              tcpn.sim
+            rescue FastTCPN::TCPN::SimulationError => e
+              error_raised = true
+              expect(e.backtrace.map { |b| b.sub /:.*$/,'' }.select{ |b| b =~ /\/lib\/fast-tcpn\// }).not_to be_empty
+            end
+            expect(error_raised).to be true
+          end
+        end
+      end
+
+      context "for invalid mapping from sentry" do
+        let(:sentry) do
+          proc do |marking_for, clock, result|
+            marking_for[:process].each do |p|
+              result << { process: p }
+            end
+          end
+        end
+
+        it_behaves_like 'error handler'
+      end
+
+      context "for NoMethodError inside simulator" do
+        let(:out_output) do
+          proc do |binding, clock|
+            { val: binding[:process].value.name.no_such_method_exists , ts: clock + 10 }
+          end
+        end
+
+        it_behaves_like 'error handler'
+      end
+
+    end
+  end
 end
