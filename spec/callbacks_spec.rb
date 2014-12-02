@@ -74,6 +74,52 @@ describe FastTCPN::TCPN do
         tcpn.sim
         expect(called).to eq 1
       end
+
+      context "when token Array is added or removed" do
+        let :tcpn do
+          m = FastTCPN::TCPN.new
+          p1 = m.timed_place 'input'
+          p2 = m.place 'output'
+          t = m.transition 'send'
+          t.input p1
+          t.output p2 do |binding, clock|
+            binding['input']
+          end
+          t.sentry do |marking_for, clock, result|
+            unless marking_for[p1.name].empty?
+              tokens = marking_for[p1.name].to_a
+              result << { p1.name => tokens }
+            end
+          end
+          p1.add :data_package1, 100
+          p1.add :data_package2, 100
+          m
+        end
+
+        it "passes token array when it is added" do
+          called = 0
+          tcpn.cb_for :place, :add do |tag, event|
+            expect(tag).to eq :add
+            expect(event.place).to eq 'output'
+            expect(event.tokens.map{ |t| t.value }).to match_array [ :data_package1, :data_package2 ]
+            called += 1
+          end
+          tcpn.sim
+          expect(called).to eq 1
+        end
+        it "passes token array when it is removed" do
+          called = 0
+          tcpn.cb_for :place, :remove do |tag, event|
+            expect(tag).to eq :remove
+            expect(event.place).to eq 'input'
+            expect(event.clock).to eq 100
+            expect(event.tokens.map{ |t| t.value }).to match_array [ :data_package1, :data_package2 ]
+            called += 1
+          end
+          tcpn.sim
+          expect(called).to eq 1
+        end
+      end
     end
 
     describe "for clock" do
