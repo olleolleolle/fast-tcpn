@@ -1,5 +1,4 @@
 require 'docile'
-require 'pry'
 
 module FastTCPN
   # Allows to create new TCPN model by interpreting passed block of code.

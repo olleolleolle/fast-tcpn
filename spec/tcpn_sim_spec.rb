@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 describe FastTCPN::TCPN do
   describe "#sim" do
