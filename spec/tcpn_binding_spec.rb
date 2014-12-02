@@ -40,4 +40,15 @@ describe FastTCPN::TCPNBinding do
     end
 
   end
+
+  context "for array of tokens for a place" do
+    let :selected_process do
+      [ marking_for[:process].to_a[0],
+        marking_for[:process].to_a[1] ]
+    end
+    it "returns array of new copies of tokens for this place" do
+      expect(subject[:process]).to eq selected_process
+    end
+
+  end
 end

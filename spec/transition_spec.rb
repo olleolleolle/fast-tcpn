@@ -2,6 +2,8 @@ require 'spec_helper'
 
 describe FastTCPN::Transition do
   let(:process) { :a_process }
+  let(:process2) { :a_process2 }
+  let(:process3) { :a_process3 }
   let(:cpu) { :a_cpu }
 
   let(:in1) do
@@ -73,7 +75,7 @@ describe FastTCPN::Transition do
       transition.fire 1000
     end
 
-    it "removes marking from input places and puts in output places" do
+    it "removes single tokens from input places and puts in output places" do
       transition.sentry do |marking_for, clock, result|
         result << { in1.name => marking_for[in1.name].first, in2.name => marking_for[in2.name].first }
       end
@@ -85,6 +87,26 @@ describe FastTCPN::Transition do
       end
       transition.fire
       expect(out.marking.each.map { |t| t.value }).to match_array [ process ]
+      expect(in2.marking.each.map { |t| t.value }).to match_array [ cpu ]
+    end
+
+    it "removes array of tokens from input places and puts in output places" do
+      in1.add process2
+      in1.add process3
+      transition.sentry do |marking_for, clock, result|
+        p1 = marking_for[in1.name].select { |t| t.value == process2 }.first
+        p2 = marking_for[in1.name].select { |t| t.value == process3 }.first
+        result << { in1.name => [p1, p2], in2.name => marking_for[in2.name].first }
+      end
+      transition.output out do |binding|
+        expect(binding[in1.name].map{ |t| t.value }).to eq [process2, process3]
+        binding[in1.name].first
+      end
+      transition.output in2 do |binding|
+        binding[in2.name]
+      end
+      transition.fire
+      expect(out.marking.each.map { |t| t.value }).to match_array [ process2 ]
       expect(in2.marking.each.map { |t| t.value }).to match_array [ cpu ]
     end
 

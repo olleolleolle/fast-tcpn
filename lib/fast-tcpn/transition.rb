@@ -26,6 +26,16 @@ module FastTCPN
       if marking.nil?
         raise TokenNotFound.new("No marking for place `#{place_name}`")
       end
+      if token.instance_of? Array
+        token.map { |t| get_new_token marking, t }
+      else
+        get_new_token marking, token
+      end
+    end
+
+    private
+
+    def get_new_token(marking, token)
       new_token = marking.get token
       if new_token.nil?
         raise TokenNotFound.new("There was no `#{token.inspect}` in `#{marking.inspect}`!")
@@ -108,7 +118,16 @@ module FastTCPN
 
       mapping.each do |place_name, token|
         unless token.kind_of? Token
-          raise InvalidToken.new("#{token.inspect} put by sentry for transition `#{name}` in binding for `#{place_name}`")
+          t = if token.instance_of? Array
+                token
+              else
+                [ token ]
+              end
+          t.each do |t|
+            unless t.kind_of? Token
+              raise InvalidToken.new("#{t.inspect} put by sentry for transition `#{name}` in binding for `#{place_name}`")
+            end
+          end
         end
         deleted = find_input(place_name).delete(token)
         if deleted.nil?

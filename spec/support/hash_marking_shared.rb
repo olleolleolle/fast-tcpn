@@ -159,6 +159,20 @@ shared_examples 'hash marking' do
         already_deleted = subject.delete subject.each(:name, wget1.name).first
         expect(subject.delete already_deleted).to eq nil
       end
+
+      context "with Array" do
+        it "deletes all tokens in the Array" do
+          tokens = []
+          tokens << subject.each(:name, wget1.name).first
+          tokens << subject.each(:name, wget2.name).first
+          expect {
+            subject.delete tokens
+          }.to change(subject, :size).by(-2)
+          expect(subject.each).not_to include(wget1)
+          expect(subject.each).not_to include(wget2)
+        end
+      end
+
     end
 
     describe "#get gets token from marking" do
@@ -181,6 +195,7 @@ shared_examples 'hash marking' do
         token2 = subject.get(token)
         expect(subject.get(token).object_id).not_to eq token2.object_id
       end
+
     end
   end
 

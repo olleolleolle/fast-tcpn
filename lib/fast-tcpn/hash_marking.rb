@@ -107,9 +107,19 @@ module FastTCPN
     # Deletes the +token+ from the marking.
     # To do it you must first find the token in
     # the marking.
-    def delete(token)
-      validate_token!(token)
-      delete_token(token)
+    def delete(tokens)
+      unless tokens.instance_of? Array
+        tokens = [ tokens ]
+      end
+      removed = tokens.map do |token|
+        validate_token!(token)
+        delete_token(token)
+      end
+      if removed.size == 1
+        removed.first
+      else
+        removed
+      end
     end
 
     # Returns number of tokens in this marking
