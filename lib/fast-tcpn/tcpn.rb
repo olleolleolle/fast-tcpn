@@ -21,6 +21,14 @@ module FastTCPN
         full_backtrace.select { |b| b !~ /#{@dir}/ }
       end
 
+      def inspect
+        "<#{self.class} #{@cause.inspect}>"
+      end
+
+      def message
+        "#{self.class}: #{@cause.message}"
+      end
+
       private
       def set_dir
         @dir = __FILE__
