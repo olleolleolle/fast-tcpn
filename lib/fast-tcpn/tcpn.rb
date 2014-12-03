@@ -132,26 +132,29 @@ module FastTCPN
       @clock.get
     end
 
-    # defines new callback for this net.
-    # +what+ can be +transition+ of +place+ for callbacks.
+    # Defines new callback for this net.
+    # +what+ can be +:transition+, +:place+ or +:clock+.
     # Transition callbacks are fired when transitions are fired, place
-    # callbacks when place marking changes.
-    # +event+ for transition callback can be +before+ or +after+, for place,
-    # can be +:add+ or +:remove+. It defines when the callbacks fill be fired.
-    # If omitted, it will be called for both cases.
+    # callbacks when place marking changes, clock callbacks when clock is moved.
+    # +tag+ for transition and clock callback can be +:before+ or +:after+, for
+    # place, can be +:add+ or +:remove+. It defines when the callbacks fill be
+    # fired. If omitted, it will be called for both cases.
     #
-    # Callback block for transition gets value of event tag (:before or :after)
-    # and FastTCPN::Transition::Event object.
+    # Callback block for transition gets value of event +tag+ (:before or :after)
+    # FastTCPN::Transition::Event object.
     #
-    # Callback block for place gets value of event tag (:add or :remove)
+    # Callback block for place gets value of event +tag+ (:add or :remove)
     # and FastTCPN::Place::Event object.
-    def cb_for(what, event = nil, &block)
+    #
+    # Callback block for clock gets value of event +tag+ (:before or :after)
+    # and FastTCPN::TCPN::ClockEvent object.
+    def cb_for(what, tag = nil, &block)
       if what == :transition
-        cb_for_transition event, &block
+        cb_for_transition tag, &block
       elsif what == :place
-        cb_for_place event, &block
+        cb_for_place tag, &block
       elsif what == :clock
-        cb_for_clock event, &block
+        cb_for_clock tag, &block
       else
         raise InvalidCallback.new "Don't know how to add callback for #{what}"
       end
@@ -159,9 +162,9 @@ module FastTCPN
 
     # :nodoc:
     # Calls callbacks, for internal use.
-    def call_callbacks(what, event, *params)
-      @callbacks[what][event].each do |block|
-        block.call event, *params
+    def call_callbacks(what, tag, *params)
+      @callbacks[what][tag].each do |block|
+        block.call tag, *params
       end
     end
 
@@ -181,29 +184,29 @@ module FastTCPN
 
     private
 
-    def cb_for_transition(event, &block)
-      if event == :before || event.nil?
+    def cb_for_transition(tag, &block)
+      if tag == :before || tag.nil?
         @callbacks[:transition][:before] << block
       end
-      if event == :after || event.nil?
+      if tag == :after || tag.nil?
         @callbacks[:transition][:after] << block
       end
     end
 
-    def cb_for_place(event, &block)
-      if event == :add || event.nil?
+    def cb_for_place(tag, &block)
+      if tag == :add || tag.nil?
         @callbacks[:place][:add] << block
       end
-      if event == :remove || event.nil?
+      if tag == :remove || tag.nil?
         @callbacks[:place][:remove] << block
       end
     end
 
-    def cb_for_clock(event, &block)
-      if event == :before || event.nil?
+    def cb_for_clock(tag, &block)
+      if tag == :before || tag.nil?
         @callbacks[:clock][:before] << block
       end
-      if event == :after || event.nil?
+      if tag == :after || tag.nil?
         @callbacks[:clock][:after] << block
       end
     end
