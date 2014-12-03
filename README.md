@@ -126,6 +126,10 @@ using `with_timestamp` method:
 
      binding[:cpu].with_timestamp + 100
 
+To return more then one token to a place just return an Array --
+all definitions or tokens from the Array will be put into the
+place's marking.
+
 Complete definition of two places and transition with one input
 and one output place can be defined as follows:
 
@@ -180,9 +184,17 @@ as values:
 
      result << { process: token1, cpu: cpu5 }
 
-In current implementation of the tool, only the first passed
-value will be used and the block will not be subsequently
-evaluated.
+To get more then one token to fire a transition, you can put
+array of tokens as value in the mapping passed to the `result`
+like this:
+
+     result << { process: [ token1, token2 ], cpu: cpu5 }
+
+In current implementation of the tool, only the first mapping
+passed to the `result` will be used and the sentry block will not
+be subsequently evaluated. It is however better to implement it
+as iteration over all possible valid bindings for possible future
+uses.
 
 Example model with one transition that is supposed to match
 process tokens with correct CPUs, pass process names to `done`
@@ -289,6 +301,7 @@ done using one of the following methods.
 * Find place by name and add tokens to it
 
      tcpn.find_place(:process).add a_process_object
+     tcpn.find_place(:process).add array_of_process_objects
 
 * Add marking for specified place of the TCPN (old API, derived
   from tcpn gem)
@@ -322,23 +335,57 @@ This method will return when simulation is finished.
 ### Callbacks
 
 Convenient way to obtain results of simulation is provided by
-callbacks. They can be defined for transitions (before and after
-firing) and for places (when adding and when removing tokens).
-Callbacks are defined using `TCPN#cb_for` method. First parameter
-of the method defines if the callback concerns transitions or
-places. Second optional parameter defines when callback should be
-fired. For transition it can be either `:before` or `:after`. For
-place it can be `:add` or `:remove` if this parameter is omitted,
-callback will be fired in both cases.
+callbacks. They can be defined 
 
-The block passes to `#cb_for` gets two parameters: first is value
+* for transitions (before and after firing)
+* for places (when adding and when removing tokens)
+* for clock (before and after changes)
+
+Callbacks are defined using `TCPN#cb_for` method. First parameter
+of the method defines if the callback concerns transitions
+(`:transition`), places (`:place`) or clock (`:clock`). Second
+optional parameter defines when callback should be fired:
+
+* for transition it can be either `:before` or `:after`
+* for place it can be `:add` or `:remove` 
+* for clock it can be either `:before` or `:after`
+
+If this parameter is omitted, callback will be fired in both cases.
+
+The block passed to `#cb_for` gets two parameters: first is value
 of the tag defining when callback is fired (`:before` or `:after`
 transition is fired, while `:add`ing or `:remove`ing tokens from
 places). Second parameter is event object holding details of the
-event. For transition callback it is Transition::Event object,
-for place callback it is Place::Event.
+event. It is:
+
+* for transition callback -- Transition::Event object with
+  fields:
+    * `transition` -- name of transition being fired
+    * `binding` -- token binding used to fire (`place => token(s)`
+    Hash)
+    * `clock` -- current clock value
+    * `tcpn` -- TCPN object representing network being run
+* for place callback -- Place::Event
+    * `place` -- name of place being changed
+    * `tokens` -- list of tokens added ore removed
+    * `clock` -- current simulation clock (only for timed places,
+    for not timed this is `nil`
+    * `tcpn` -- TCPN object representing network being run
+* for clock callback -- TCPN::ClockEvent object
+    * `clock` -- current value of simulation clock
+    * `previous_clock` -- previous value of simulation clock (for
+    `:before` this one is `nil`)
+    * `tcpn` -- TCPN object representing network being run
 
 ## Known Errors and Pitfalls
+
+### Arrays and Hashes as token values
+
+Arrays and Hashes are used to describe tokens (their list, values and
+timestamps). Therefore passing an Array or a Hash that itself should be
+a token value will not work. If you need to do it, either encapsulate
+the Array or the Hash into your own class or just create an empty class
+that extends Array or Hash -- this should work too.
 
 ### Cloning problems
 
@@ -357,7 +404,6 @@ that cause simulation problems.
 
 ### TODO
 
-* Update README
 * Possible optimization can be achieved by implementing
   clone-on-write instead of eager cloning every time when a token
   is passed to user-provided code. We can use

@@ -44,7 +44,7 @@ module FastTCPN
     end
   end
 
-  # This is implementation of TCPN transition. 
+  # This is implementation of TCPN transition.
   # It has input and output places and it can be fired.
   class Transition
     InvalidToken = Class.new RuntimeError
