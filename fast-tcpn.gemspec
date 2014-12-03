@@ -36,4 +36,5 @@ Gem::Specification.new do |s|
   s.rdoc_options << '--title' << 'fast-tcpn -- Fast TCPN modeling and simulation tool'
   s.rdoc_options << '--line-numbers'
   s.rdoc_options << '-A'
+  s.rdoc_options << '-x coverage'
 end
