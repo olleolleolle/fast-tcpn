@@ -418,4 +418,12 @@ that cause simulation problems.
   traditional guard. Maybe we could allow traditional guards only
   for transitions that remove single tokens? They will not be
   recommended way of implementing this anyway.
-
+* Currently, HashMarking uses own implementation of
+  `lazy_shuffle` to provide tokens in random order. This is meant
+  to be possibly fast for small number of tokens yielded. It
+  requires benchmarking for cases when most or all tokens from
+  marking should be yielded and probably should be reworked for
+  these cases. I expect it to be a problem for cases when there
+  are tokens in input places, but they do not meed requirements
+  and transition cannot be fired -- then probably all tokens will
+  be checked by sentry of this transition.
