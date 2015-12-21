@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fast-tcpn (0.0.1.pre1)
+    fast-tcpn (0.0.2.pre1)
       docile (~> 1.1)
 
 GEM
@@ -35,3 +35,6 @@ DEPENDENCIES
   fast-tcpn!
   rspec (~> 3.1)
   simplecov (~> 0)
+
+BUNDLED WITH
+   1.10.6

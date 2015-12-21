@@ -239,4 +239,85 @@ describe FastTCPN::TCPN do
 
     end
   end
+
+  describe "#stop" do
+    AppProcess = Struct.new(:name)
+    CPU = Struct.new(:name, :process)
+
+    let(:net) do
+      n = FastTCPN::TCPN.new
+      n
+    end
+
+    let(:process_count) { 10 }
+    let(:cpu_count) { 10 }
+
+    let(:process) { net.place :process, name: :name }
+    let(:cpu) { net.place :cpu, name: :name, process: :process }
+    let(:out) { net.place :out }
+    let(:finished) { net.place :finished }
+
+
+    before do
+      t1 = net.transition :work
+      t1.sentry do |marking_for, clock, result|
+        marking_for[:process].each do |p|
+          marking_for[:cpu].each(:process, p.value.name) do |c|
+            result << { process: p, cpu: c }
+          end
+        end
+      end
+      t1.input process
+      t1.input cpu
+      t1.output out do |binding|
+        binding[:process].value.name + "_done"
+      end
+      t1.output cpu do |binding|
+        binding[:cpu]
+      end
+
+      t2 = net.transition :finish
+      t2.input out
+      t2.output finished do |binding|
+        binding[:out]
+      end
+
+      process_count.times do |p|
+        process.add AppProcess.new(p.to_s)
+        cpu_count.times.map { |c| cpu.add CPU.new("CPU#{c}_#{p}", p.to_s) }
+      end
+
+    end
+
+    it "stops running simulator" do
+      transitions = []
+      net.cb_for :transition, :after do |t, e|
+        transitions << e.transition
+        if transitions.size == 2
+          net.stop
+        end
+      end
+      net.sim
+      expect(transitions.size).to eq 2
+    end
+
+    describe "#stopped?" do
+      it "is true if simulation was stopped by #stop" do
+        transitions = []
+        net.cb_for :transition, :after do |t, e|
+          transitions << e.transition
+          if transitions.size == 2
+            net.stop
+          end
+        end
+        net.sim
+        expect(net.stopped?).to be true
+      end
+
+      it "is false if simulation finished without #stop" do
+        net.sim
+        expect(net.stopped?).to be false
+      end
+    end
+  end
 end

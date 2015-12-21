@@ -5,6 +5,7 @@ module FastTCPN
 
     PlaceTypeDoesNotMach = Class.new RuntimeError
     InvalidCallback = Class.new RuntimeError
+    StopSimulation = Class.new RuntimeError
 
     class SimulationError < RuntimeError
       def initialize(cause)
@@ -68,6 +69,7 @@ module FastTCPN
         place: { add: [], remove: [] },
         clock: { before: [], after: [] }
       }
+      @stopped = false
     end
 
     # Create and return new not timed place for this model.
@@ -125,10 +127,13 @@ module FastTCPN
 
     # Starts simulation of this net.
     def sim
-      begin
-        fired = fire_transitions
-        advanced = move_clock_to find_next_time
-      end while fired || advanced
+      @stopped = catch :stop_simulation do
+        begin
+          fired = fire_transitions
+          advanced = move_clock_to find_next_time
+        end while fired || advanced
+      end
+      @stopped = false if @stopped == nil
     rescue StandardError => e
       raise SimulationError.new(e)
     end
@@ -188,6 +193,17 @@ module FastTCPN
     def add_marking_for(name, m)
       token = m
       find_place(name).add token
+    end
+
+    # stop simulation now, no matter if there are any enabled transitions
+    def stop
+      # raise StopSimulation.new
+      throw :stop_simulation, true
+    end
+
+    # True if simulation was stopped using #stop method
+    def stopped?
+      @stopped
     end
 
     private
