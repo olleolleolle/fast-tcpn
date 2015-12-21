@@ -332,6 +332,23 @@ Simulation of the model can be started using `sim` method.
 
 This method will return when simulation is finished.
 
+Simulation finishes whe there is no more transitions to fire even after
+advancing simulation clock. It can also be stopped manually by calling
+`#stop` method:
+
+    tcpn.stop
+
+This method can be used e.g. in callbacks (see below).
+
+After simulation has finished, it is possible to check if it was
+finished manually using `#stopped?` method.
+
+    if tcpn.stopped?
+      puts "Simulation was stopped manually."
+    else
+      puts "Simulation has finished. No more transitions to fire."
+    end
+
 ### Callbacks
 
 Convenient way to obtain results of simulation is provided by
