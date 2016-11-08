@@ -60,6 +60,10 @@ module FastTCPN
       def inspect
         "<#{self.class} #{@cause.inspect} in transition `#{@transition.name}`>"
       end
+
+      def to_s
+        inspect
+      end
     end
 
     attr_reader :name
