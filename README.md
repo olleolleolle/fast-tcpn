@@ -1,4 +1,4 @@
-FastTCPN
+FastTCPN (fast-tcpn) library technical documentation
 ========
 
 Fast simulation tool for Timed Colored Petri Nets (TCPN)
