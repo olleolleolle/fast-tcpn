@@ -1,3 +1,3 @@
 module FastTCPN
-  VERSION = '0.0.4.pre1'
+  VERSION = '0.0.6.pre1'
 end
