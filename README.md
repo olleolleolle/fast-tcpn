@@ -444,3 +444,10 @@ that cause simulation problems.
   are tokens in input places, but they do not meed requirements
   and transition cannot be fired -- then probably all tokens will
   be checked by sentry of this transition.
+  
+  
+  
+  
+# Copyright
+
+Copyright (c) 2014-2018 Wojciech Rząsa. See LICENSE.txt for further details. Contact me if interested in different license conditions.
