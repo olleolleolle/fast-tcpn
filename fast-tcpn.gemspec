@@ -13,16 +13,16 @@ Gem::Specification.new do |s|
   s.homepage = 'https://github.com/wrzasa/fast-tcpn'
   s.summary = 'FastTCPN is Ruby based modeling and simulation tool for simulation of TCPN with convenient DSL.'
   s.description = 'You can model your Timed Colored Petri Net in Ruby using convenient DSL and simulate it quite efficiently.'
-  s.license = 'GPL-v3'
+  s.license = 'GPL-3.0'
 
   s.platform = 'ruby'
   s.required_ruby_version = '~> 2.0'
 
 #  s.rubyforge_project = ''
 
-  s.files = `hg locate`.split("\n")
-  s.test_files = `hg locate spec/*`.split("\n")
-  s.executables = `hg locate -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.files = `git ls-files -z`.split("\x0")
+  s.test_files = s.files.grep(%r{^(test|spec|features)/})
+  s.executables = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
   s.require_paths = %w(lib)
 
   s.add_runtime_dependency 'docile', '~> 1.1'
