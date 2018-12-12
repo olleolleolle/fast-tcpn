@@ -9,6 +9,12 @@ This tool provides library to represent TCPN model and exposing
 require API. It also provides DSL that facilitates creating the
 TCPN model.
 
+# Installation
+
+```
+gem install rbsim
+
+
 TCPN DSL
 --------
 
