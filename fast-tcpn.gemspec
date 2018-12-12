@@ -9,11 +9,11 @@ Gem::Specification.new do |s|
   s.name = 'fast-tcpn'
   s.version = FastTCPN::VERSION
   s.authors = ['Wojciech Rząsa']
-  s.email = %w(wrzasa@prz-rzeszow.pl)
-  s.homepage = 'http://wrzasa.sd.prz.edu.pl/'
+  s.email = %w(me@wojciechrzasa.pl)
+  s.homepage = 'https://github.com/wrzasa/fast-tcpn'
   s.summary = 'FastTCPN is Ruby based modeling and simulation tool for simulation of TCPN with convenient DSL.'
   s.description = 'You can model your Timed Colored Petri Net in Ruby using convenient DSL and simulate it quite efficiently.'
-  s.license = '(c) WRz'
+  s.license = 'GPL-v3'
 
   s.platform = 'ruby'
   s.required_ruby_version = '~> 2.0'
